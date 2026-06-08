@@ -5,9 +5,13 @@ from pathlib import Path
 from typing import Any
 
 import matplotlib.pyplot as plt
-import seaborn as sns
 
-sns.set_theme(style="whitegrid", palette="muted")
+try:
+    import seaborn as sns
+except ModuleNotFoundError:
+    sns = None
+else:
+    sns.set_theme(style="whitegrid", palette="muted")
 
 
 @contextmanager
