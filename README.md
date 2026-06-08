@@ -34,6 +34,31 @@ uv sync
 
 ## Utils
 
+### `utils/settings.py`
+
+Single setting: `SEED` (default `69`). Override via environment variable.
+
+```python
+from utils.settings import settings
+
+rng = np.random.default_rng(settings.SEED)
+```
+
+### `utils/logger.py`
+
+Coloured stdout logger. Pass keyword arguments for structured context fields.
+
+```python
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
+
+logger.info("Starting", n=1000, seed=42)
+logger.warning("Something off")
+logger.error("Something failed")
+logger.success("Done")
+```
+
 ### `utils/plotting.py`
 
 Applies seaborn whitegrid + muted palette globally on import. Provides a `figure` context manager that shows or saves the figure on exit.
@@ -46,7 +71,7 @@ with figure(figsize=(8, 4)) as fig:
     ax = fig.add_subplot(111)
     ax.hist(samples, bins=10)
 
-# Save to file
+# Save to file (logs the absolute path on save, creates directories if needed)
 with figure(figsize=(8, 4), save="output.png") as fig:
     ax = fig.add_subplot(111)
     ax.hist(samples, bins=10)

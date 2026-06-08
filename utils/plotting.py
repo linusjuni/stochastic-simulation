@@ -7,7 +7,11 @@ from typing import Any
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+from utils.logger import get_logger
+
 sns.set_theme(style="whitegrid", palette="muted")
+
+logger = get_logger(__name__)
 
 
 @contextmanager
@@ -29,10 +33,13 @@ def figure(
         yield fig
     finally:
         if save is not None:
+            path = Path(save)
+            path.parent.mkdir(parents=True, exist_ok=True)
             defaults: dict[str, Any] = {"dpi": 300, "bbox_inches": "tight"}
             defaults.update(save_kwargs)
-            fig.savefig(save, **defaults)
+            fig.savefig(path, **defaults)
             plt.close(fig)
+            logger.success("Saved figure", path=str(path.resolve()))
         else:
             plt.show()
             plt.close(fig)
