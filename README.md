@@ -31,3 +31,23 @@ utils/               # Shared helper functions
 ```bash
 uv sync
 ```
+
+## Utils
+
+### `utils/plotting.py`
+
+Applies seaborn whitegrid + muted palette globally on import. Provides a `figure` context manager that shows or saves the figure on exit.
+
+```python
+from utils.plotting import figure
+
+# Show interactively
+with figure(figsize=(8, 4)) as fig:
+    ax = fig.add_subplot(111)
+    ax.hist(samples, bins=10)
+
+# Save to file
+with figure(figsize=(8, 4), save="output.png") as fig:
+    ax = fig.add_subplot(111)
+    ax.hist(samples, bins=10)
+```
