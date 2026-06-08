@@ -33,7 +33,7 @@ def exercise_b_evaluate_lcg(values: list[float]) -> dict[str, dict[str, float]]:
     return stats
 
 
-def exercise_c_compare_bad_and_good(sample_size: int) -> None:
+def exercise_c_compare_bad_and_good(sample_size: int, output_dir: Path) -> None:
     bad_params = {"seed": 7, "a": 1, "b": 1, "m": 16}
     good_params = {"seed": 7, "a": 16807, "b": 0, "m": 2_147_483_647}
 
@@ -43,6 +43,8 @@ def exercise_c_compare_bad_and_good(sample_size: int) -> None:
     print("Exercise c: bad vs good parameters")
     print_stats("  Bad LCG", analyze(bad_values))
     print_stats("  Good LCG", analyze(good_values))
+    # Save bad LCG histogram for part (a) comparison and debugging
+    save_histogram(bad_values, output_dir / "bad_lcg_histogram.png", title="Bad LCG histogram")
 
 
 def exercise_d_compare_system_generator(sample_size: int, seeds: list[int]) -> None:
@@ -83,7 +85,7 @@ def main() -> None:
 
     lcg_values = exercise_a_generate_lcg_values(sample_size)
     exercise_b_evaluate_lcg(lcg_values)
-    exercise_c_compare_bad_and_good(sample_size)
+    exercise_c_compare_bad_and_good(sample_size, output_dir)
     exercise_d_compare_system_generator(sample_size, seeds)
 
     save_histogram(lcg_values, output_dir / "good_lcg_histogram.png", title="Good LCG histogram")
