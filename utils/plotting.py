@@ -124,7 +124,7 @@ def histogram(
         stat=stat,
         kde=kde,
         discrete=discrete,
-        edgecolor="white",
+        edgecolor="black",
         linewidth=0.6,
         ax=ax,
         **kwargs,
