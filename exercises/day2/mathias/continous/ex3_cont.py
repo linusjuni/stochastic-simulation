@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+from scipy.stats import expon, norm, pareto, kstest, t, chi2
 
 from utils.plotting import histogram
 
@@ -43,34 +44,60 @@ def gaussian_conf_intervals_mean(obs):
     mean = np.mean(obs)
     std = np.std(obs, ddof=1)
     n = len(obs)
-    z_score = 1.96  # for 95% confidence
-    margin_of_error = z_score * (std / np.sqrt(n))
+    # Variance is unknown -> t-distribution with n-1 dof, not normal.
+    t_score = t.ppf(0.975, df=n - 1)
+    margin_of_error = t_score * (std / np.sqrt(n))
     return mean - margin_of_error, mean + margin_of_error
 
 def gaussian_conf_intervals_variance(obs):
     n = len(obs)
     var = np.var(obs, ddof=1)
-    chi2_lower = np.percentile(np.random.chisquare(n - 1, size=10000), 2.5)
-    chi2_upper = np.percentile(np.random.chisquare(n - 1, size=10000), 97.5)
+    chi2_lower = chi2.ppf(0.025, df=n - 1)
+    chi2_upper = chi2.ppf(0.975, df=n - 1)
     lower_bound = (n - 1) * var / chi2_upper
     upper_bound = (n - 1) * var / chi2_lower
     return lower_bound, upper_bound
 
+def composition_method_pareto(n, k, beta):
+    lambda_ = np.random.gamma(shape=k, scale=beta, size=n)
+    x = np.random.exponential(scale=1/lambda_)
+    return x + beta # shoft to [beta, inf)]
+
+
+
 if __name__ == "__main__":
     # a) exponential dist
     SIZE = 10000
-    samples = exponential_dist(lambda_=1.0, size=SIZE)
-    histogram(samples,discrete=False, title="Exponential Distribution (lambda=1.0)")
+    lambda_exp = 1.0
+    exp_samples = exponential_dist(lambda_=lambda_exp, size=SIZE)
+    ax = histogram(exp_samples, stat="density", discrete=False,
+                   title=f"Exponential vs analytical pdf (lambda={lambda_exp})")
+    xs = np.linspace(0, exp_samples.max(), 200)
+    ax.plot(xs, lambda_exp * np.exp(-lambda_exp * xs),
+            color="red", linewidth=2, label="pdf")
+    ax.legend()
     plt.savefig("exercises/day2/mathias/continous/exponential_dist.png")
+    ks_exp = kstest(exp_samples, expon(scale=1 / lambda_exp).cdf)
+    print(f"[exp]    KS D={ks_exp.statistic:.4f}  p={ks_exp.pvalue:.4f}")
     
     # b) Gaussian Box-Mueller and contour plot
     Z0, Z1 = gaussian_box_mueller(size=SIZE)
-    plt.figure(figsize=(8, 6))
+    plt.figure(figsize=(8, 8))
     sns.kdeplot(x=Z0, y=Z1, fill=True, cmap="viridis")
     plt.title("Gaussian Distribution (Box-Mueller)")
     plt.xlabel("Z0")
     plt.ylabel("Z1")
     plt.savefig("exercises/day2/mathias/continous/gaussian_box_mueller.png")
+
+    # 1D verification of Z0 against N(0,1)
+    ax = histogram(Z0, stat="density", discrete=False,
+                   title="Box-Muller Z0 vs N(0,1) pdf")
+    xs = np.linspace(-4, 4, 200)
+    ax.plot(xs, norm.pdf(xs), color="red", linewidth=2, label="N(0,1) pdf")
+    ax.legend()
+    plt.savefig("exercises/day2/mathias/continous/gaussian_1d_check.png")
+    ks_norm = kstest(Z0, norm.cdf)
+    print(f"[normal] KS D={ks_norm.statistic:.4f}  p={ks_norm.pvalue:.4f}")
     
     # c) pareto distribution
     beta = 1.0
@@ -85,10 +112,20 @@ if __name__ == "__main__":
         sampled_pareto_means.append(float(np.mean(samples)))
         sampled_pareto_variances.append(float(np.var(samples)))
         ax = axes[i // 2, i % 2]
-        histogram(samples, bins="auto", discrete=False, title=f"Pareto Distribution (k={k_val}, beta={beta})", ax=ax)
-        ax.set_title(f"Pareto Distribution (k={k_val}, beta={beta})")
+        # Clip the x-range at the 99th percentile so the heavy tail does not
+        # squash the body of the distribution against the y-axis.
+        upper = np.percentile(samples, 99)
+        clipped = samples[samples <= upper]
+        histogram(clipped, bins="auto", stat="density", discrete=False,
+                  title=f"Pareto (k={k_val}, beta={beta})", ax=ax)
+        xs = np.linspace(beta, upper, 400)
+        pdf = k_val * beta**k_val / xs**(k_val + 1)
+        ax.plot(xs, pdf, color="red", linewidth=2, label="pdf")
+        ax.legend()
+        ks_p = kstest(samples, pareto(b=k_val, scale=beta).cdf)
+        print(f"[pareto k={k_val}] KS D={ks_p.statistic:.4f}  p={ks_p.pvalue:.4f}")
     plt.tight_layout()
-    plt.savefig("exercises/day2/mathias/continous/pareto_dist.png") 
+    plt.savefig("exercises/day2/mathias/continous/pareto_dist.png")
     
     # 2) Analysis of the Pareto distribution
     print("Theoretical Pareto Means:", theoretical_pareto_means)
@@ -101,7 +138,8 @@ if __name__ == "__main__":
     # mean and variance of a Gaussian distribution
     gaussian_samples = gaussian_box_mueller(size=SIZE)[0] # Use only one
     confidence_intervals = [gaussian_conf_intervals_mean(np.random.choice(gaussian_samples, size=10, replace=False)) for _ in range(100)]
-    print("Sample Confidence Intervals for the Mean of Gaussian Distribution:")
+    mean_hits = sum(lo <= 0 <= hi for lo, hi in confidence_intervals)
+    print(f"[mean CI] coverage: {mean_hits}/100  (expected ~95)")
     # plot spread of confidence intervals
     lower_bounds = [ci[0] for ci in confidence_intervals]
     upper_bounds = [ci[1] for ci in confidence_intervals]
@@ -117,7 +155,8 @@ if __name__ == "__main__":
 
     # confidence intervals for variance
     confidence_intervals_var = [gaussian_conf_intervals_variance(np.random.choice(gaussian_samples, size=10, replace=False)) for _ in range(100)]
-    print("Sample Confidence Intervals for the Variance of Gaussian Distribution:")
+    var_hits = sum(lo <= 1 <= hi for lo, hi in confidence_intervals_var)
+    print(f"[var  CI] coverage: {var_hits}/100  (expected ~95)")
     lower_bounds_var = [ci[0] for ci in confidence_intervals_var]
     upper_bounds_var = [ci[1] for ci in confidence_intervals_var]
     plt.figure(figsize=(10, 6))
@@ -130,6 +169,7 @@ if __name__ == "__main__":
     plt.legend()
     plt.savefig("exercises/day2/mathias/continous/confidence_intervals_variance.png")
     
+    # 4) Simulate pareto using composition method
     
 
     
