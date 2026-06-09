@@ -27,7 +27,7 @@ def six_point_dist_rejection_sampling(SIZE):
     # find the maximum probability
     C = max(p_x.values())
     dist = []
-    for i in range(1, SIZE):
+    for i in range(SIZE):
         U1 = np.random.random()
         U2 = np.random.random()
         candidate = int(np.floor(U1 * 6)) + 1
@@ -43,8 +43,55 @@ def six_point_dist_direct_crude_method(p_x):
         if U < cdf_x[i]:
             return i + 1
 
-def alias_method()
-    
+def build_alias_tables(p):
+    """
+    Slide 16. p: length-k probabilities (sum to 1).
+    Returns F, L. Both 0-indexed.
+    """
+    k = len(p)
+    F = np.array(p, dtype=float) * k     # step 2: scaled probs, mean = 1
+    L = np.arange(k)                      # step 1: each class is its own alias initially
+
+    # step 3: partition into surplus (G) and deficit (S)
+    G = [i for i in range(k) if F[i] >= 1]
+    S = [i for i in range(k) if F[i] <  1]
+
+    # step 4: pair deficits with surpluses until S is empty
+    while S:
+        i = G[0]   # a surplus class — the donor
+        j = S[0]   # a deficit class — the receiver
+
+        L[j] = i                          # bucket j's top is aliased to i
+        F[i] = F[i] - (1 - F[j])          # i donated (1 - F[j]) of its mass
+
+        if F[i] < 1 - 1e-12:              # i dropped below 1 → now a deficit
+            G.pop(0)
+            S.append(i)
+
+        S.pop(0)                          # j is fully assigned
+
+    return F, L
+
+
+def sample_alias(F, L):
+    """
+    Slide 14-15. One draw. Returns a 0-indexed class.
+    """
+    k = len(F)
+    U1, U2 = np.random.random(), np.random.random()
+    I = int(np.floor(k * U1))             # pick a bucket uniformly
+    return I if U2 <= F[I] else L[I]      # bottom of bucket vs top
+
+
+def six_point_dist_alias(SIZE):
+    p = np.array([7/48, 5/48, 1/8, 1/16, 1/4, 5/16])
+    F, L = build_alias_tables(p)
+    samples = np.zeros(SIZE, dtype=int)
+    for n in range(SIZE):
+        samples[n] = sample_alias(F, L) + 1   # +1 for 1-indexed display
+    return samples
+
+
 
 if __name__ == "__main__":
     dist = np.zeros(shape=SIZE)
@@ -95,4 +142,12 @@ if __name__ == "__main__":
     
     histogram(six_point_dist_direct, bins="auto", discrete=True, title="Six point distribution via direct crude method, 10000 samples", xlabel="Value", ylabel="Counts")
     plt.savefig("exercises/day2/mathias/six_point_dist_direct.png")
+    plt.show()
+
+    six_point_dist_alias_samples = six_point_dist_alias(SIZE)
+    print(f"Theoretical mean: {theoretical_mean}, Theoretical variance: {theoretical_variance}")
+    print(f"Sample mean: {np.mean(six_point_dist_alias_samples)}, Sample variance: {np.var(six_point_dist_alias_samples)}")
+
+    histogram(six_point_dist_alias_samples, bins="auto", discrete=True, title="Six point distribution via alias method, 10000 samples", xlabel="Value", ylabel="Counts")
+    plt.savefig("exercises/day2/mathias/six_point_dist_alias.png")
     plt.show()
