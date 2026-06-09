@@ -1,4 +1,9 @@
 
+"""
+Run with: 
+uv run -m exercises.day1.mathilde.main
+"""
+
 from __future__ import annotations
 
 from pathlib import Path
