@@ -171,6 +171,12 @@ if __name__ == "__main__":
     
     # 4) Simulate pareto using composition method
     
+    for k_val in k:
+        samples = composition_method_pareto(n=SIZE, k=k_val, beta=beta)
+        ks_comp = kstest(samples, pareto(b=k_val, scale=beta).cdf)
+        print(f"[composition pareto k={k_val}] KS D={ks_comp.statistic:.4f}  p={ks_comp.pvalue:.4f}")
+    
+        
 
     
 
