@@ -1,0 +1,100 @@
+<svg viewBox="0 0 900 500" xmlns="http://www.w3.org/2000/svg">
+  <!-- Title -->
+  <text x="450" y="30" font-size="24" font-weight="bold" text-anchor="middle">
+    Rejection Sampling: Discrete Case
+  </text>
+  
+  <!-- Legend -->
+  <rect x="50" y="50" width="20" height="20" fill="#2E86AB"/>
+  <text x="80" y="65" font-size="14">Target p(i)</text>
+  
+  <rect x="300" y="50" width="20" height="20" fill="#A23B72" opacity="0.3"/>
+  <text x="330" y="65" font-size="14">Envelope C·q(i)</text>
+  
+  <!-- Axes -->
+  <line x1="80" y1="420" x2="850" y2="420" stroke="black" stroke-width="2"/>
+  <line x1="80" y1="100" x2="80" y2="420" stroke="black" stroke-width="2"/>
+  
+  <!-- Axis labels -->
+  <text x="870" y="430" font-size="14">State i</text>
+  <text x="30" y="250" font-size="14" text-anchor="end">Probability</text>
+  
+  <!-- Y-axis ticks and labels -->
+  <line x1="75" y1="420" x2="80" y2="420" stroke="black" stroke-width="1"/>
+  <text x="70" y="425" font-size="12" text-anchor="end">0</text>
+  
+  <line x1="75" y1="343" x2="80" y2="343" stroke="black" stroke-width="1"/>
+  <text x="70" y="348" font-size="12" text-anchor="end">0.2</text>
+  
+  <line x1="75" y1="267" x2="80" y2="267" stroke="black" stroke-width="1"/>
+  <text x="70" y="272" font-size="12" text-anchor="end">0.4</text>
+  
+  <line x1="75" y1="191" x2="80" y2="191" stroke="black" stroke-width="1"/>
+  <text x="70" y="196" font-size="12" text-anchor="end">0.6</text>
+  
+  <line x1="75" y1="115" x2="80" y2="115" stroke="black" stroke-width="1"/>
+  <text x="70" y="120" font-size="12" text-anchor="end">0.8</text>
+  
+  <!-- Data: p = (7/48, 5/48, 1/8, 1/16, 1/4, 5/16) -->
+  <!-- Probabilities in decimal: (0.1458, 0.1042, 0.125, 0.0625, 0.25, 0.3125) -->
+  <!-- Scaled to pixel heights (multiply by 320 to fit 0-1 range into chart) -->
+  
+  <!-- State 1: p=7/48≈0.1458 -->
+  <rect x="100" y="373" width="40" height="47" fill="#2E86AB"/>
+  <rect x="100" y="125" width="40" height="295" fill="#A23B72" opacity="0.3"/>
+  <text x="120" y="440" font-size="13" text-anchor="middle">1</text>
+  
+  <!-- State 2: p=5/48≈0.1042 -->
+  <rect x="155" y="387" width="40" height="33" fill="#2E86AB"/>
+  <rect x="155" y="125" width="40" height="295" fill="#A23B72" opacity="0.3"/>
+  <text x="175" y="440" font-size="13" text-anchor="middle">2</text>
+  
+  <!-- State 3: p=1/8=0.125 -->
+  <rect x="210" y="380" width="40" height="40" fill="#2E86AB"/>
+  <rect x="210" y="125" width="40" height="295" fill="#A23B72" opacity="0.3"/>
+  <text x="230" y="440" font-size="13" text-anchor="middle">3</text>
+  
+  <!-- State 4: p=1/16=0.0625 -->
+  <rect x="265" y="400" width="40" height="20" fill="#2E86AB"/>
+  <rect x="265" y="125" width="40" height="295" fill="#A23B72" opacity="0.3"/>
+  <text x="285" y="440" font-size="13" text-anchor="middle">4</text>
+  
+  <!-- State 5: p=1/4=0.25 -->
+  <rect x="320" y="340" width="40" height="80" fill="#2E86AB"/>
+  <rect x="320" y="125" width="40" height="295" fill="#A23B72" opacity="0.3"/>
+  <text x="340" y="440" font-size="13" text-anchor="middle">5</text>
+  
+  <!-- State 6: p=5/16≈0.3125 -->
+  <rect x="375" y="320" width="40" height="100" fill="#2E86AB"/>
+  <rect x="375" y="125" width="40" height="295" fill="#A23B72" opacity="0.3"/>
+  <text x="395" y="440" font-size="13" text-anchor="middle">6</text>
+  
+  <!-- Envelope line (flat at C·q = 15/8 ≈ 1.875, scaled to pixels) -->
+  <line x1="80" y1="125" x2="420" y2="125" stroke="#A23B72" stroke-width="2" stroke-dasharray="5,5"/>
+  
+  <!-- Annotation for envelope -->
+  <text x="500" y="135" font-size="13" fill="#A23B72">C·q(i) = 15/8 (flat)</text>
+  
+  <!-- Sample acceptance visualization: state 6 -->
+  <circle cx="395" cy="280" r="4" fill="green" opacity="0.7"/>
+  <text x="450" y="285" font-size="12" fill="green">Accept: U₂ ≤ p₆/(C·q₆)</text>
+  
+  <circle cx="395" cy="150" r="4" fill="red" opacity="0.7"/>
+  <text x="450" y="155" font-size="12" fill="red">Reject: U₂ &gt; p₆/(C·q₆)</text>
+  
+  <!-- Arrow showing rejection region -->
+  <path d="M 430 160 L 410 165" stroke="red" stroke-width="1.5" fill="none" marker-end="url(#arrowred)"/>
+  
+  <!-- Arrow showing acceptance region -->
+  <path d="M 430 280 L 410 285" stroke="green" stroke-width="1.5" fill="none" marker-end="url(#arrowgreen)"/>
+  
+  <!-- Arrow markers -->
+  <defs>
+    <marker id="arrowred" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="red"/>
+    </marker>
+    <marker id="arrowgreen" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="green"/>
+    </marker>
+  </defs>
+</svg>
