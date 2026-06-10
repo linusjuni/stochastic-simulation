@@ -104,3 +104,9 @@ if __name__ == "__main__":
         ax.set_xlabel("$U_i$")
         ax.set_ylabel("$U_{i+1}$")
         ax.set_title("Consecutive pairs (n=10,000)")
+
+    # Exercise 2: system generator
+    rng = np.random.default_rng(settings.SEED)
+    system_samples = rng.uniform(0, 1, 10_000)
+    logger.info("Testing numpy system generator (PCG64)")
+    run_all_tests(system_samples)
