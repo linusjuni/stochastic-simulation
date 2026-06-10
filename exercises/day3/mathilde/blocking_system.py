@@ -6,11 +6,13 @@ import numpy as np
 
 
 def simulate(interarrival: np.ndarray, service: np.ndarray, m: int) -> float:
+    # loss system: a customer is blocked (lost) if all m servers are busy on arrival
     arrivals = np.cumsum(interarrival)
     departures: list[float] = []  # min-heap of busy-server departure times
     blocked = 0
 
     for t, s in zip(arrivals, service):
+        # free up any servers that finished before this arrival
         while departures and departures[0] <= t:
             heapq.heappop(departures)
         if len(departures) < m:
@@ -22,6 +24,7 @@ def simulate(interarrival: np.ndarray, service: np.ndarray, m: int) -> float:
 
 
 def erlang_b(A: float, m: int) -> float:
+    # numerically stable recursion for Erlang's B-formula, avoids large factorials
     b = 1.0
     for i in range(1, m + 1):
         b = A * b / (i + A * b)
@@ -41,6 +44,7 @@ def erlang_interarrival(shape: int):
 
 
 def hyperexp_interarrival(n: int, rng: np.random.Generator) -> np.ndarray:
+    # mixture of two exponentials; mean = p1/lam1 + p2/lam2 = 0.8/0.8333 + 0.2/5 = 1
     p = [0.8, 0.2]
     lam = [0.8333, 5.0]
     branch = rng.choice(2, size=n, p=p)
@@ -58,7 +62,8 @@ def constant_service(n: int, rng: np.random.Generator) -> np.ndarray:
 
 
 def pareto_service(k: float):
-    beta = 8.0 * (k - 1) / k  # so that E[X] = beta * k/(k-1) = 8
+    # inversion sampling: X = beta / U^(1/k); beta chosen so E[X] = beta*k/(k-1) = 8
+    beta = 8.0 * (k - 1) / k
 
     def gen(n: int, rng: np.random.Generator) -> np.ndarray:
         u = rng.uniform(size=n)
