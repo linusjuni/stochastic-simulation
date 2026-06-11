@@ -43,14 +43,13 @@ def is_exponentials(n, lam_):
     return theta_is, (CI(theta_is, theta_is_var, n))
 
 def is_pareto(n, k):
-    samples = np.random.pareto(a=k, size=n)
-    proposal_evals = n * [1 / (k - 1)]
-    target_evals = pareto.pdf(samples, b=k)
-    indicator = samples >= 0
-    weights = (indicator * target_evals) / proposal_evals
+    samples = pareto.rvs(b=k - 1, size=n)            # g = first moment dist = Pareto(k-1)
+    target_evals = pareto.pdf(samples, b=k)          # f(x)   = Pareto(k)
+    proposal_evals = pareto.pdf(samples, b=k - 1)    # g_1(x) = Pareto(k-1)
+    weights = samples * target_evals / proposal_evals  # h(x) = x  for the mean
     theta_is = np.mean(weights)
-    theta_is_var = (1 / n) * np.var(weights)
-    return theta_is, (CI(theta_is, theta_is_var, n))
+    theta_is_var = np.var(weights) / n
+    return theta_is, CI(theta_is, theta_is_var, n)
 
     
     
