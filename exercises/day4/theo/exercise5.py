@@ -46,12 +46,13 @@ def control(n):
     mean = np.mean(Y)
     std = np.std(Y, ddof=1)
     half_width = scipy.stats.t.ppf(0.975, df=n-1) * std / np.sqrt(n)
-    return mean, (mean - half_width, mean + half_width)
+    return mean, (mean - half_width, mean + half_width), c
 
-mean, ci = control(n=100)
+mean, ci, c = control(n=100)
 print('-'*34)
 print(f"Part 3 - Control MC\nmean = {mean:.6f}, 95% CI = ({ci[0]:.6f}, {ci[1]:.6f})")
 print(f"  True value: {np.e - 1:.6f}")
+print(f"Constant c: {c}")
 
 # Part 4
 def stratified(n, k=10):
