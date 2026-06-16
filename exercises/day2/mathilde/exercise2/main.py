@@ -23,7 +23,7 @@ from utils.plotting import figure
 PROBS = np.array([7 / 48, 5 / 48, 6 / 48, 3 / 48, 12 / 48, 15 / 48])
 VALUES = np.array([1, 2, 3, 4, 5, 6])
 N = 10_000
-SEED = 42
+SEED = 69
 OUT = Path(__file__).resolve().parent
 
 
@@ -58,35 +58,39 @@ def part1_geometric(rng: np.random.Generator) -> None:
 
 
 # --- Part 2 ---
-def part2_six_point(rng: np.random.Generator) -> None:
+def part2_six_point() -> None:
     print("\n=== Part 2: Six-point distribution ===")
     prob_table, alias_table = alias_build(PROBS)
 
-    methods = {
-        "crude": crude_sample(PROBS, N, rng),
-        "rejection": rejection_sample(PROBS, N, rng),
-        "alias": alias_sample(prob_table, alias_table, N, rng),
-    }
+    for seed in [42, 69]:
+        print(f"  -- seed {seed} --")
+        seed_rng = np.random.default_rng(seed)
+        methods = {
+            "crude": crude_sample(PROBS, N, seed_rng),
+            "rejection": rejection_sample(PROBS, N, seed_rng),
+            "alias": alias_sample(prob_table, alias_table, N, seed_rng),
+        }
 
-    for name, samples in methods.items():
-        counts = _six_point_counts(samples)
-        gof = chi_square_gof(counts, PROBS, N)
-        print(
-            f"  {name}: chi2={gof['statistic']:.4f}, p-value={gof['pvalue']:.4f}"
-        )
+        for name, samples in methods.items():
+            counts = _six_point_counts(samples)
+            gof = chi_square_gof(counts, PROBS, N)
+            print(
+                f"  {name}: chi2={gof['statistic']:.4f}, p-value={gof['pvalue']:.4f}"
+            )
 
-        x = np.arange(len(VALUES))
-        w = 0.35
-        with figure(figsize=(8, 4), save=OUT / f"sixpoint_{name}.png") as fig:
-            ax = fig.add_subplot(111)
-            ax.bar(x - w / 2, counts / N, width=w, label="simulated", alpha=0.8)
-            ax.bar(x + w / 2, PROBS, width=w, label="theoretical", alpha=0.8)
-            ax.set_xticks(x)
-            ax.set_xticklabels(VALUES)
-            ax.set_xlabel("x")
-            ax.set_ylabel("probability")
-            ax.set_title(f"Six-point distribution — {name} method")
-            ax.legend()
+            if seed == 69:
+                x = np.arange(len(VALUES))
+                w = 0.35
+                with figure(figsize=(8, 4), save=OUT / f"sixpoint_{name}.png") as fig:
+                    ax = fig.add_subplot(111)
+                    ax.bar(x - w / 2, counts / N, width=w, label="simulated", alpha=0.8)
+                    ax.bar(x + w / 2, PROBS, width=w, label="theoretical", alpha=0.8)
+                    ax.set_xticks(x)
+                    ax.set_xticklabels(VALUES)
+                    ax.set_xlabel("x")
+                    ax.set_ylabel("probability")
+                    ax.set_title(f"Six-point distribution — {name} method")
+                    ax.legend()
 
 
 # --- Part 3: comparison ---
@@ -126,7 +130,7 @@ def part3_compare(rng: np.random.Generator) -> None:
 def main() -> None:
     rng = np.random.default_rng(SEED)
     part1_geometric(rng)
-    part2_six_point(rng)
+    part2_six_point()
     part3_compare(rng)
 
 

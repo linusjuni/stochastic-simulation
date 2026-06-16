@@ -1,9 +1,12 @@
 # Exercise 4 – Discrete Event Simulation of a Blocking System
 
 System: m = 10 servers, no waiting room, mean inter-arrival = 1, mean service
-time = 8 ⇒ offered traffic A = 8 Erlang. Each configuration is run as
-**10 × 10,000 customers**, giving a 95% CI from a t-distribution over the
-10 per-run blocked fractions.
+time = 8 ⇒ offered traffic A = 8 Erlang. The simulation follows the
+**event-by-event principle**: an event list (priority queue) of arrival and
+departure events, a state variable (number of busy servers) and a statistical
+accumulator (blocked count). Each configuration is run as **10 × 10,000
+customers**; the 10 runs are treated as independent **sub-samples** and give a
+95% CI from a t-distribution over the 10 per-run blocked fractions.
 
 **Erlang B (A=8, m=10) = 0.1217**
 
@@ -14,7 +17,7 @@ time = 8 ⇒ offered traffic A = 8 Erlang. Each configuration is run as
 | Poisson / Exponential  | 0.1221   | [0.1184, 0.1258]  | Yes             |
 
 The simulation matches the analytical Erlang B formula closely, confirming the
-discrete-event implementation is correct.
+event-by-event implementation is correct.
 
 ## Part 2: Renewal arrival processes (exponential service)
 

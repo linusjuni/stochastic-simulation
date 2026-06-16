@@ -5,20 +5,27 @@ import heapq
 import numpy as np
 
 
-def simulate(interarrival: np.ndarray, service: np.ndarray, m: int) -> float:
-    # loss system: a customer is blocked (lost) if all m servers are busy on arrival
-    arrivals = np.cumsum(interarrival)
-    departures: list[float] = []  # min-heap of busy-server departure times
-    blocked = 0
+ARRIVAL, DEPARTURE = 0, 1
 
-    for t, s in zip(arrivals, service):
-        # free up any servers that finished before this arrival
-        while departures and departures[0] <= t:
-            heapq.heappop(departures)
-        if len(departures) < m:
-            heapq.heappush(departures, t + s)
+
+def simulate(interarrival: np.ndarray, service: np.ndarray, m: int) -> float:
+    # event-by-event simulation of an m-server loss system (no waiting room)
+    arrivals = np.cumsum(interarrival)
+    events = [(t, ARRIVAL, i) for i, t in enumerate(arrivals)]  # event list
+    heapq.heapify(events)
+    n_busy = 0  # state variable: servers in use
+    blocked = 0  # statistical accumulator
+
+    while events:
+        t, kind, i = heapq.heappop(events)  # advance clock to next event
+        if kind == ARRIVAL:
+            if n_busy < m:
+                n_busy += 1
+                heapq.heappush(events, (t + service[i], DEPARTURE, i))
+            else:
+                blocked += 1  # all servers busy -> customer is lost
         else:
-            blocked += 1
+            n_busy -= 1
 
     return blocked / len(arrivals)
 
