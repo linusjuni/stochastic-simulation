@@ -117,7 +117,7 @@ if __name__ == "__main__":
     initial_state = 0
     samples = metropolis_hastings_part1(n_samples, initial_state, lo, hi)
     histogram(samples, discrete=True, title="Metropolis-Hastings Samples, A = 8, m=10", xlabel="State", ylabel="Frequency")
-    plt.savefig("exercises/day5/mathias/metropolis_hastings_samples.png")
+    plt.savefig("report/plots/day5/metropolis_hastings_samples.png")
     plt.show()
 
     histogram(erlang.rvs(a=8, size=100000 ), discrete=True, title="Samples from Erlang Distribution (A=8)", xlabel="State", ylabel="Frequency")
@@ -130,7 +130,7 @@ if __name__ == "__main__":
     A1, A2 = 4, 4
     samples = metropolis_hastings_part2(n_samples, init_state_1, init_state_2, lo, hi)
     histogram([i + j for i, j in samples], discrete=True, title="Metropolis-Hastings Samples, A1 = A2 = 4, m=10", xlabel="State", ylabel="Frequency")
-    plt.savefig("exercises/day5/mathias/metropolis_hastings_samples_part2.png")
+    plt.savefig("report/plots/day5/metropolis_hastings_samples_part2.png")
     plt.show()
     
     # part 3) Gibbs sampling
@@ -138,5 +138,5 @@ if __name__ == "__main__":
     init_state_1, init_state_2 = 0, 0
     samples = gibbs_sampling_part2(n_samples, init_state_1, init_state_2)
     histogram([i + j for i, j in samples], discrete=True, title="Gibbs Sampling Samples, A1 = A2 = 4, m=10", xlabel="State", ylabel="Frequency")
-    plt.savefig("exercises/day5/mathias/gibbs_samples_part2.png")
+    plt.savefig("report/plots/day5/gibbs_samples_part2.png")
     plt.show() 

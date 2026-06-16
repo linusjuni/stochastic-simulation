@@ -93,13 +93,13 @@ if __name__ == "__main__":
 
     # g.figure.suptitle(f"Prior Samples with rho={rho}", y=1.02)
     # g.set_axis_labels(r"$\theta$", r"$\psi$")
-    # g.savefig("exercises/day5/mathias/prior_samples.png")
+    # g.savefig("report/plots/day5/prior_samples.png")
     # plt.show()
     theta, psi = X[0], Y[0]
     # sample gaussian with mean theta and variance psi
     samples = np.random.normal(loc=theta, scale=np.sqrt(psi), size=10)
     histogram(samples, discrete=False, kde=True, title=f"Samples from Gaussian with N(theta, psi) (rho={rho}), n=10", xlabel="Value", ylabel="Frequency")
-    plt.savefig("exercises/day5/mathias/gaussian_samples_theta_psi.png")
+    plt.savefig("report/plots/day5/gaussian_samples_theta_psi.png")
     plt.show()
 
     # c) draw posterior samples from prior and likelihood
@@ -113,7 +113,7 @@ if __name__ == "__main__":
     g.plot_joint(sns.kdeplot, color="red", levels=8, zorder=2)
     g.figure.suptitle(f"Posterior Samples with rho={rho}, n={n_samples}", y=1.02)
     g.set_axis_labels(r"$\theta$", r"$\psi$")
-    g.savefig("exercises/day5/mathias/posterior_samples.png")
+    g.savefig("report/plots/day5/posterior_samples.png")
     plt.show()
 
     
@@ -128,7 +128,7 @@ if __name__ == "__main__":
     g.plot_joint(sns.kdeplot, color="red", levels=8, zorder=2)
     g.figure.suptitle(f"Log Posterior Samples with rho={rho}, n={n_samples}", y=1.02)
     g.set_axis_labels(r"$\theta$", r"$\psi$")
-    g.savefig("exercises/day5/mathias/log_posterior_samples.png")
+    g.savefig("report/plots/day5/log_posterior_samples.png")
     plt.show()
 
     

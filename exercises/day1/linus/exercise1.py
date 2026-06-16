@@ -9,7 +9,7 @@ logger = get_logger(__name__)
 
 N = 10_000
 LAGS = [1, 2, 5]
-PLOTS = "exercises/day1/linus/plots"
+PLOTS = "report/plots/day1"
 
 A_GOOD, C_GOOD, M_GOOD = 1_664_525, 1_013_904_223, 2**32
 A_BAD,  C_BAD,  M_BAD  = 5, 1, 16
