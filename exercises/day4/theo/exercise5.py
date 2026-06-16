@@ -1,6 +1,6 @@
 # Author: Theodor la Cour, s225093
 # Generative AI tools from Anthropic were used in the creation of this file.
-# They have been used for code structering, coding, and verification.
+# They have been used for synthesizing, code structering, coding, and verification.
 # The author takes full responsibility for all content and decisions in this file.
 
 import numpy as np
@@ -46,12 +46,13 @@ def control(n):
     mean = np.mean(Y)
     std = np.std(Y, ddof=1)
     half_width = scipy.stats.t.ppf(0.975, df=n-1) * std / np.sqrt(n)
-    return mean, (mean - half_width, mean + half_width)
+    return mean, (mean - half_width, mean + half_width), c
 
-mean, ci = control(n=100)
+mean, ci, c = control(n=100)
 print('-'*34)
 print(f"Part 3 - Control MC\nmean = {mean:.6f}, 95% CI = ({ci[0]:.6f}, {ci[1]:.6f})")
 print(f"  True value: {np.e - 1:.6f}")
+print(f"Constant c: {c}")
 
 # Part 4
 def stratified(n, k=10):
@@ -73,7 +74,7 @@ print(f"Part 4 - Stratified MC\nmean = {mean:.6f}, 95% CI = ({ci[0]:.6f}, {ci[1]
 print(f"  True value: {np.e - 1:.6f}")
 
 # Part 5
-# Modified simulate that also returns sum of inter-arrival times
+# Modified simulate function that also returns sum of inter-arrival times
 def simulate_cv(arrival_fn, service_fn, m, n):
     server_free_at = np.zeros(m)
     t = 0.0
