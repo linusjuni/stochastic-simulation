@@ -2,6 +2,7 @@
 Run with:
 uv run -m exercises.day2.mathilde.exercise2.main
 """
+
 from __future__ import annotations
 
 import time
@@ -17,14 +18,17 @@ from exercises.day2.mathilde.exercise2.discrete import (
     geometric_sample,
     rejection_sample,
 )
-from exercises.day2.mathilde.exercise2.stats_tests import chi_square_gof, geometric_chi_square
+from exercises.day2.mathilde.exercise2.stats_tests import (
+    chi_square_gof,
+    geometric_chi_square,
+)
 from utils.plotting import figure
 
 PROBS = np.array([7 / 48, 5 / 48, 6 / 48, 3 / 48, 12 / 48, 15 / 48])
 VALUES = np.array([1, 2, 3, 4, 5, 6])
 N = 10_000
 SEED = 69
-OUT = Path(__file__).resolve().parent
+OUT = Path(__file__).resolve().parents[4] / "report" / "plots" / "day2"
 
 
 def _six_point_counts(samples: np.ndarray) -> np.ndarray:
@@ -38,7 +42,7 @@ def part1_geometric(rng: np.random.Generator) -> None:
         samples = geometric_sample(p, N, rng)
         gof = geometric_chi_square(samples, p)
         print(
-            f"  p={p}: mean={samples.mean():.3f} (theory={1/p:.3f}), "
+            f"  p={p}: mean={samples.mean():.3f} (theory={1 / p:.3f}), "
             f"chi2={gof['statistic']:.3f}, p-value={gof['pvalue']:.4f}"
         )
 
@@ -50,7 +54,9 @@ def part1_geometric(rng: np.random.Generator) -> None:
         with figure(figsize=(8, 4), save=OUT / f"geometric_p{p}.png") as fig:
             ax = fig.add_subplot(111)
             ax.bar(k_vals, counts / N, label="simulated", alpha=0.7, width=0.6)
-            ax.plot(k_vals, theory, "ro-", markersize=4, linewidth=1, label="theoretical")
+            ax.plot(
+                k_vals, theory, "ro-", markersize=4, linewidth=1, label="theoretical"
+            )
             ax.set_xlabel("k")
             ax.set_ylabel("probability")
             ax.set_title(f"Geometric distribution, p={p}")
@@ -74,9 +80,7 @@ def part2_six_point() -> None:
         for name, samples in methods.items():
             counts = _six_point_counts(samples)
             gof = chi_square_gof(counts, PROBS, N)
-            print(
-                f"  {name}: chi2={gof['statistic']:.4f}, p-value={gof['pvalue']:.4f}"
-            )
+            print(f"  {name}: chi2={gof['statistic']:.4f}, p-value={gof['pvalue']:.4f}")
 
             if seed == 69:
                 x = np.arange(len(VALUES))

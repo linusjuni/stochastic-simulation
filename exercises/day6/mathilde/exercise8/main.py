@@ -2,6 +2,7 @@
 Run with:
 uv run -m exercises.day6.mathilde.exercise8.main
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -17,7 +18,7 @@ from exercises.day6.mathilde.exercise8.bootstrap import (
 from utils.plotting import figure
 
 SEED = 42
-OUT = Path(__file__).resolve().parent
+OUT = Path(__file__).resolve().parents[4] / "report" / "plots" / "day6"
 
 
 def part1_bootstrap_mean(rng: np.random.Generator) -> None:
@@ -62,7 +63,9 @@ def part2_var_s2(rng: np.random.Generator) -> None:
 
     # sanity check: Ross Ex. 14, n=2, X={1,3} -> bootstrap Var(S^2) = 1
     check_rng = np.random.default_rng(0)
-    _, var_check = bootstrap_variance(np.array([1.0, 3.0]), sample_variance, 50_000, check_rng)
+    _, var_check = bootstrap_variance(
+        np.array([1.0, 3.0]), sample_variance, 50_000, check_rng
+    )
     assert np.isclose(var_check, 1.0, atol=0.05)
 
 
@@ -74,8 +77,12 @@ def part3_mean_vs_median(rng: np.random.Generator) -> None:
 
     print("\nPart 3: mean vs. median, Pareto(beta=1, k=1.05), n=200")
     print(f"{'estimator':<10} {'estimate':>12} {'boot. var':>14} {'boot. std err':>14}")
-    print(f"{'mean':<10} {mean_hat:>12.4f} {mean_var:>14.4f} {np.sqrt(mean_var):>14.4f}")
-    print(f"{'median':<10} {median_hat:>12.4f} {median_var:>14.4f} {np.sqrt(median_var):>14.4f}")
+    print(
+        f"{'mean':<10} {mean_hat:>12.4f} {mean_var:>14.4f} {np.sqrt(mean_var):>14.4f}"
+    )
+    print(
+        f"{'median':<10} {median_hat:>12.4f} {median_var:>14.4f} {np.sqrt(median_var):>14.4f}"
+    )
 
     mean_reps = bootstrap_replicates(data, np.mean, 100, rng)
     median_reps = bootstrap_replicates(data, np.median, 100, rng)

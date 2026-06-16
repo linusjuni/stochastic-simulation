@@ -2,6 +2,7 @@
 Run with:
 uv run -m exercises.day3.mathilde.main
 """
+
 from __future__ import annotations
 
 import re
@@ -30,10 +31,12 @@ N_REPS = 10
 SEED = 42
 A = 8.0  # offered traffic = lambda * s = 1 * 8
 ERLANG_B = erlang_b(A, M)
-OUT = Path(__file__).resolve().parent
+OUT = Path(__file__).resolve().parents[3] / "report" / "plots" / "day3"
 
 
-def run_config(arrival_gen, service_gen, rng: np.random.Generator) -> tuple[float, float, float, np.ndarray]:
+def run_config(
+    arrival_gen, service_gen, rng: np.random.Generator
+) -> tuple[float, float, float, np.ndarray]:
     fractions = np.empty(N_REPS)
     for i in range(N_REPS):
         interarrival = arrival_gen(N_CUSTOMERS, rng)
@@ -89,7 +92,9 @@ def main() -> None:
     results["Lognormal service (Part 3c)"] = (mean, lo, hi)
 
     print("\n=== Part 4: Comparison ===")
-    print(f"  {'Configuration':<28} {'Fraction':>9} {'CI low':>9} {'CI high':>9}  {'Erlang B in CI?':>15}")
+    print(
+        f"  {'Configuration':<28} {'Fraction':>9} {'CI low':>9} {'CI high':>9}  {'Erlang B in CI?':>15}"
+    )
     for name, (mean, lo, hi) in results.items():
         in_ci = lo <= ERLANG_B <= hi
         print(f"  {name:<28} {mean:>9.4f} {lo:>9.4f} {hi:>9.4f}  {str(in_ci):>15}")
@@ -114,19 +119,37 @@ def main() -> None:
                 ax.axhspan(min(rows) - 0.5, max(rows) + 0.5, color="#eef1f5", zorder=0)
 
         # Erlang B reference: faint band + dashed line
-        ax.axvspan(ERLANG_B - 0.002, ERLANG_B + 0.002, color=ref_c, alpha=0.12, zorder=1)
+        ax.axvspan(
+            ERLANG_B - 0.002, ERLANG_B + 0.002, color=ref_c, alpha=0.12, zorder=1
+        )
         ax.axvline(ERLANG_B, color=ref_c, linestyle="--", lw=1.5, zorder=2)
 
         # one errorbar call per colour so green = matches Erlang B, red = deviates
         for color, mask in [(match_c, in_ci), (dev_c, ~in_ci)]:
-            ax.errorbar(means[mask], y[mask], xerr=[los[mask], his[mask]], fmt="o",
-                        color=color, ecolor=color, capsize=5, markersize=9,
-                        elinewidth=2, zorder=3)
+            ax.errorbar(
+                means[mask],
+                y[mask],
+                xerr=[los[mask], his[mask]],
+                fmt="o",
+                color=color,
+                ecolor=color,
+                capsize=5,
+                markersize=9,
+                elinewidth=2,
+                zorder=3,
+            )
 
         # annotate each point with its blocked fraction, just past the error bar
         for yi, m, h, ok in zip(y, means, his, in_ci):
-            ax.annotate(f"{m:.3f}", (m + h, yi), xytext=(8, 0), textcoords="offset points",
-                        va="center", fontsize=10, color=match_c if ok else dev_c)
+            ax.annotate(
+                f"{m:.3f}",
+                (m + h, yi),
+                xytext=(8, 0),
+                textcoords="offset points",
+                va="center",
+                fontsize=10,
+                color=match_c if ok else dev_c,
+            )
 
         ax.set_yticks(y)
         ax.set_yticklabels(names)
@@ -136,9 +159,32 @@ def main() -> None:
         ax.invert_yaxis()
 
         handles = [
-            Line2D([0], [0], marker="o", lw=0, markersize=9, color=match_c, label="matches Erlang B"),
-            Line2D([0], [0], marker="o", lw=0, markersize=9, color=dev_c, label="deviates from Erlang B"),
-            Line2D([0], [0], color=ref_c, linestyle="--", lw=1.5, label=f"Erlang B = {ERLANG_B:.4f}"),
+            Line2D(
+                [0],
+                [0],
+                marker="o",
+                lw=0,
+                markersize=9,
+                color=match_c,
+                label="matches Erlang B",
+            ),
+            Line2D(
+                [0],
+                [0],
+                marker="o",
+                lw=0,
+                markersize=9,
+                color=dev_c,
+                label="deviates from Erlang B",
+            ),
+            Line2D(
+                [0],
+                [0],
+                color=ref_c,
+                linestyle="--",
+                lw=1.5,
+                label=f"Erlang B = {ERLANG_B:.4f}",
+            ),
         ]
         ax.legend(handles=handles, loc="lower right", framealpha=0.9)
 

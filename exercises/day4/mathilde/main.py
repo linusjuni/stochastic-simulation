@@ -2,6 +2,7 @@
 Run with:
 uv run -m exercises.day4.mathilde.main
 """
+
 from __future__ import annotations
 
 import math
@@ -29,14 +30,14 @@ from exercises.day4.mathilde.stats import t_ci
 from utils.plotting import figure
 
 SEED = 42
-N = 100           # function evaluations for parts 1–4
-N_PAIRS = 50      # antithetic pairs (= 100 evaluations)
-K_STRATA = 10     # strata count for stratified sampling
+N = 100  # function evaluations for parts 1–4
+N_PAIRS = 50  # antithetic pairs (= 100 evaluations)
+K_STRATA = 10  # strata count for stratified sampling
 N_CUSTOMERS = 10_000
 N_PILOT = 100
 N_REPS = 100
 N_IS = 10_000
-OUT = Path(__file__).resolve().parent
+OUT = Path(__file__).resolve().parents[3] / "report" / "plots" / "day4"
 
 
 def part1_crude(rng: np.random.Generator) -> tuple[float, float, float, float]:
@@ -82,8 +83,13 @@ def _plot_ci_comparison(results: dict[str, tuple[float, float, float, float]]) -
     with figure(figsize=(9, 4), save=OUT / "ci_comparison.png") as fig:
         ax = fig.add_subplot(111)
         y = np.arange(len(names))
-        ax.axvline(true_val, color="#d62728", linestyle="--", lw=1.5,
-                   label=f"e−1 = {true_val:.6f}")
+        ax.axvline(
+            true_val,
+            color="#d62728",
+            linestyle="--",
+            lw=1.5,
+            label=f"e−1 = {true_val:.6f}",
+        )
         for yi, m, lo, hi in zip(y, means, los, his):
             ax.plot([lo, hi], [yi, yi], color="#2ca02c", lw=2.5)
             ax.plot(m, yi, "o", color="#2ca02c", markersize=8)
@@ -115,9 +121,11 @@ def part5_blocking(rng: np.random.Generator) -> None:
     cv_mean, _, _, cv_w = t_ci(Ys)
 
     print(f"\n  {'Method':<20} {'Mean':>10} {'CI width':>12} {'Reduction':>10}")
-    print(f"  {'-'*55}")
+    print(f"  {'-' * 55}")
     print(f"  {'Crude (no CV)':<20} {crude_mean:>10.6f} {crude_w:>12.6f} {'---':>10}")
-    print(f"  {'Control variate':<20} {cv_mean:>10.6f} {cv_w:>12.6f} {crude_w/cv_w:>9.2f}×")
+    print(
+        f"  {'Control variate':<20} {cv_mean:>10.6f} {cv_w:>12.6f} {crude_w / cv_w:>9.2f}×"
+    )
 
 
 def part7_is_tail(rng: np.random.Generator) -> None:
@@ -145,8 +153,9 @@ def part8_exp_is(rng: np.random.Generator) -> None:
     with figure(figsize=(7, 4), save=OUT / "is_lambda_variance.png") as fig:
         ax = fig.add_subplot(111)
         ax.plot(lambdas, variances, lw=2)
-        ax.axvline(lam_star, color="#d62728", linestyle="--",
-                   label=f"λ* = {lam_star:.4f}")
+        ax.axvline(
+            lam_star, color="#d62728", linestyle="--", label=f"λ* = {lam_star:.4f}"
+        )
         ax.axhline(var_star, color="#d62728", linestyle=":", alpha=0.5)
         ax.set_xlabel("λ")
         ax.set_ylabel("Var(W)")
@@ -155,7 +164,7 @@ def part8_exp_is(rng: np.random.Generator) -> None:
 
     print(f"\n  n={N_IS},  true value e−1 = {math.e - 1:.6f}")
     print(f"  {'Estimator':<24} {'Mean':>10} {'CI width':>12}")
-    print(f"  {'-'*48}")
+    print(f"  {'-' * 48}")
     samples_crude = crude_mc(N_IS, rng)
     m, _, _, w = t_ci(samples_crude)
     print(f"  {'Crude MC':<24} {m:>10.6f} {w:>12.6f}")
@@ -189,18 +198,25 @@ def main() -> None:
     true_val = math.e - 1.0
     print(f"\n  True value e−1 = {true_val:.6f}")
     print(f"\n  {'Method':<24} {'CI width':>10} {'Reduction':>12}")
-    print(f"  {'-'*48}")
-    for name, r in [("Crude", r1), ("Antithetic", r2), ("Control variate", r3), ("Stratified", r4)]:
+    print(f"  {'-' * 48}")
+    for name, r in [
+        ("Crude", r1),
+        ("Antithetic", r2),
+        ("Control variate", r3),
+        ("Stratified", r4),
+    ]:
         reduction = r1[3] / r[3] if name != "Crude" else 1.0
         suffix = "---" if name == "Crude" else f"{reduction:.1f}×"
         print(f"  {name:<24} {r[3]:>10.4f} {suffix:>12}")
 
-    _plot_ci_comparison({
-        "Crude (n=100)": r1,
-        "Antithetic (50 pairs)": r2,
-        "Control variate (n=100)": r3,
-        "Stratified (n=100, k=10)": r4,
-    })
+    _plot_ci_comparison(
+        {
+            "Crude (n=100)": r1,
+            "Antithetic (50 pairs)": r2,
+            "Control variate (n=100)": r3,
+            "Stratified (n=100, k=10)": r4,
+        }
+    )
 
     part5_blocking(rng)
     part7_is_tail(rng)
