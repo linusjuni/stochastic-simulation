@@ -1,0 +1,336 @@
+\section*{Day 5}
+\section*{Exercise 6}
+
+In this exercise we apply Markov chain Monte Carlo (MCMC) to three problems:
+a truncated Poisson distribution (Part 1), a truncated bivariate distribution
+where direct sampling is awkward but the conditional distributions are
+tractable (Part 2), and a Bayesian inference problem with a log-normal prior
+(Part 3). For all discrete cases we verify the samplers using a $\chi^2$
+goodness-of-fit test against the exact target distribution.
+
+\subsection{Part 1: Truncated Poisson via Metropolis Hastings}
+
+The target is the distribution:
+\begin{equation}
+    P(i) = c\frac{A^{i}}{i!}, \qquad i=0,1,\dots,m,
+\end{equation}
+with values similar to part 4 ( $A=8$, $m=10$). The normalizing constant $c$ depends on $m$ and is not
+needed by Metropolis Hastings since the acceptance ratio only involves
+$g(i)=A^{i}/i!$:
+\begin{equation}
+    \alpha(i,j) \;=\; \min\!\left(1,\;\frac{g(j)}{g(i)}\right)
+                = \min \left(1, \frac{A^j/j!}{A^i/i!}\right).
+\end{equation}
+We use a symmetric proposal distribution, h(i,j) namely, random-walk proposal on the integers, $j = i \pm 1$ with
+equal probability, and reject any move outside $\{0,\dots,m\}$. The core loop
+is:
+\begin{lstlisting}[language=Python]
+samples = [initial_state]
+for _ in range(n):
+    current_state  = samples[-1]
+    proposed_state = current_state + np.random.choice([-1, 1])
+    if proposed_state < lo or proposed_state > hi:
+        samples.append(current_state); continue
+    acceptance_prob = min(1, g(proposed_state) / g(current_state))
+    if np.random.random() < acceptance_prob:
+        samples.append(proposed_state)
+    else:
+        samples.append(current_state)
+\end{lstlisting}
+Figure~\ref{fig:mh_part1} shows the empirical distribution after $10^{5}$ MH
+steps thinned by a factor of $10$, (Done to reduce correlation between 1-lag samples, tool used in model-based machine learning course 42186). A $\chi^2$ goodness-of-fit test against the
+exact pmf, pooling bins with expected count below $5$, gives
+$\chi^2 = 2.919$ on $9$ degrees of freedom with $p = 0.967$, so we
+comfortably fail to reject the null hypothesis that the samples come from
+the truncated Poisson.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\linewidth]{plots/day5/metropolis_hastings_samples.png}
+    \caption{Metropolis--Hastings samples from the truncated Poisson with
+    $A=8$, $m=10$.}
+    \label{fig:mh_part1}
+\end{figure}
+
+\subsection{Part 2: Joint truncated distribution}
+
+We now target the joint
+\begin{equation}
+    P(i,j) \;=\; c\,\frac{A_{1}^{i}}{i!}\,\frac{A_{2}^{j}}{j!},
+    \qquad 0 \le i+j \le m,
+\end{equation}
+with $A_{1}=A_{2}=4$ and $m=10$. We sample this in two ways: coordinate-wise
+Metropolis--Hastings and Gibbs sampling. (A direct joint random-walk proposal
+that perturbs both coordinates simultaneously by $\pm 1$ was implemented but
+discarded -- it mixes poorly because every step couples the two coordinates,
+and it cannot easily reach states near the boundary $i+j=m$.)
+
+\paragraph{Coordinate-wise Metropolis--Hastings.}
+At each iteration we pick one coordinate uniformly at random and propose a
+$\pm 1$ step on it; the other coordinate is held fixed. Proposals that violate
+$i,j\ge 0$ or $i+j>m$ are rejected. The acceptance ratio is the same
+factorial expression as in Part~1.
+\begin{lstlisting}[language=Python]
+p = np.random.random()
+if p < 0.5:
+    proposed_i, proposed_j = curr_i + np.random.choice([-1, 1]), curr_j
+else:
+    proposed_i, proposed_j = curr_i, curr_j + np.random.choice([-1, 1])
+\end{lstlisting}
+
+\paragraph{Gibbs sampling.}
+The full conditional of $i$ given $j$ is itself a truncated Poisson on
+$\{0,\dots,m-j\}$ proportional to $A_{1}^{i}/i!$, and symmetrically for $j$
+given $i$. We sample this conditional directly by enumerating its pmf on the
+allowed support:
+\begin{equation}
+    P(A_1 = i | A_2 = j) = \frac{P(A_1=i, A_2=j)}{\sum_i'^{m-j}P(A_1=i, A_2=j)} = \frac{\frac{4^i 4^j}{i! j!}}{\sum_{i'}^{m-j}\frac{4^{i'} 4^j}{{i'}! j!}} = \frac{\frac{4^i}{i!}}{\sum_{i'}^{m-j}\frac{4^{i'}}{{i'}!}} 
+\end{equation}
+Because every proposal is drawn from the exact conditional, there is no
+accept/reject step; every sweep updates both coordinates.
+
+Figure~\ref{fig:mh_part2} and Figure~\ref{fig:gibbs_part2} show the
+distribution of the sum $i+j$ for the two samplers. The $\chi^2$ test against
+the exact joint pmf gives $\chi^2 = 55.54$, $p = 0.79$ on $65$ d.o.f. for
+the coordinate-wise MH sampler and $\chi^2 = 61.01$, $p = 0.62$ on $65$
+d.o.f. for the Gibbs sampler. Both samplers fail to reject the null at any
+reasonable significance level, with the MH sampler giving a marginally higher
+$p$-value here.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\linewidth]{plots/day5/metropolis_hastings_samples_part2.png}
+    \caption{Coordinate-wise Metropolis--Hastings samples: distribution of
+    $i+j$ with $A_{1}=A_{2}=4$, $m=10$.}
+    \label{fig:mh_part2}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\linewidth]{plots/day5/gibbs_samples_part2.png}
+    \caption{Gibbs sampling: distribution of $i+j$ with $A_{1}=A_{2}=4$,
+    $m=10$.}
+    \label{fig:gibbs_part2}
+\end{figure}
+
+\subsection{Part 3: Bayesian inference with a log-normal prior}
+
+We consider the model $X_{i}\mid (\Theta,\Psi)\sim N(\Theta,\Psi)$ where the
+prior on $(\Xi,\Gamma)=(\log\Theta,\log\Psi)$ is bivariate normal with
+standard-normal marginals and correlation $\rho=\tfrac{1}{2}$, so that
+$(\Theta,\Psi)$ has the log-normal density given in the problem statement.
+
+\subsubsection*{Sampling the prior}
+
+For a bi-variate standard normal with correlation $\rho$, the relation between the 2 variates is defined as: 
+\begin{equation}
+    Y = \rho X + \sqrt{1-\rho^2} = \frac{X}{2} + \frac{\sqrt{2}}{2} Z
+\end{equation}
+where $X, Z \sim \mathcal{N}(0,1)$. So the generative story becomes: 
+\begin{itemize} 
+    \item for sample in samples draw $\Gamma_i, Z_i \sim \mathcal{N}(0,1), \mathcal{N}(0,1)$
+    \item for each sample i draw $\Xi_i = \frac{\Gamma_i}{2} + \frac{\sqrt{3}}{2} Z_i$
+    \item  $\Theta = e^\Xi, \Psi = e^\Gamma$
+\end{itemize}
+
+The Gaussian $(\Xi,\Gamma)$ and the
+exponentiated $(\Theta,\Psi)$ are shown in
+Figures~\ref{fig:prior_log} and \ref{fig:prior}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.55\linewidth]{plots/day5/log_prior_samples.png}
+    \caption{Prior samples in log-space: $(\Xi,\Gamma)$ from a standard
+    bivariate normal with $\rho=0.5$.}
+    \label{fig:prior_log}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.55\linewidth]{plots/day5/prior_samples.png}
+    \caption{Prior samples $(\Theta,\Psi)=(e^{\Xi},e^{\Gamma})$ on the
+    original scale.}
+    \label{fig:prior}
+\end{figure}
+
+\subsubsection*{(b) Simulating observations}
+
+We now draw $(\theta, \psi)$ once from the prior then, we simulate the likelihood 
+$X_{1},\dots,X_{n}\sim N(\theta,\psi)$. Figure~\ref{fig:data} shows the
+$n=10$ observations used in part~(d).
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.55\linewidth]{plots/day5/gaussian_samples_theta_psi.png}
+    \caption{Simulated observations $X_{1},\dots,X_{10}\sim N(\theta,\psi)$
+    for the prior draw $(\theta,\psi)$.}
+    \label{fig:data}
+\end{figure}
+
+\subsubsection*{(c) Posterior derivation}
+
+We shall now consider how the posterior distribution looks like for this setup: 
+We first remember ourselves that the posterior is proportional to the joint density with some constant. In other words the posterior distribution is proportional to the likelihood times the prior. 
+\begin{equation}
+    P(\Theta, \Psi | X) = \frac{P(\Theta, \Psi, X)}{\iint P(\Theta, \Psi, X) d\theta d\psi} =
+    \frac{P(X|\Theta, \Psi) P(\Theta, \Psi)}{\iint P(\Theta, \Psi, X) d \theta d \psi} \propto P(X|\Theta, \Psi) P(\Theta, \Psi) 
+\end{equation}
+\begin{equation}
+     P(X|\Theta, \Psi) P(\Theta, \Psi) = \left( \prod_{i=1}^n  P(X_i|\Theta, \Psi) \right) P(\Theta, \Psi) = \left( \prod_{i=1}^n \mathcal{N}(\Theta, \Psi) \right) f(\Theta, \Psi)
+\end{equation}
+\begin{equation}
+    \left(\prod_{i=1}^n \frac{1}{\sqrt{2 \pi \psi}}  e^{- \frac{(x_i -\theta)^2}{2 \psi}} \right) \frac{1}{2 \pi \theta \psi \sqrt{1-\rho^2}} e^{ -\frac{\log (\theta)^2-2 \rho \log (\theta) \log (\psi\psi)+\log (\psi)^2}{2\left(1-\rho^2\right)}}
+\end{equation}
+\begin{equation}
+    (2 \pi \psi)^{- \frac{n}{2}}  e^{-\frac{1}{2 \psi} \sum_{i=1}^n (x_i -\theta)^2} \frac{1}{2 \pi \theta \psi \sqrt{1-\rho^2}} e^{ -\frac{\log (\theta)^2-2 \rho \log (\theta) \log (\psi\psi)+\log (\psi)^2}{2\left(1-\rho^2\right)}}
+\end{equation}
+Since we consider the density proportional to the posterior we can remove the constants: 
+\begin{equation}
+    P(\Theta, \Psi | X) \propto \psi^{- \frac{n}{2}} \frac{1}{\theta \psi} e^{-\frac{1}{2 \psi} \sum_{i=1}^n (x_i -\theta)^2} e^{ -\frac{\log (\theta)^2-2 \rho \log (\theta) \log (\psi\psi)+\log (\psi)^2}{2\left(1-\rho^2\right)}}
+\end{equation}
+
+We have now derived a density proportional to the posterior distribution. That we are able to evaluate from. With a proposal distribution of 
+\begin{equation}
+    h(\theta, \psi) = \mathcal{N}(0, \Sigma)
+\end{equation}
+We can now make use of the MH algorithm to sample from the posterior distribution. 
+
+\subsubsection*{(d) Metropolis--Hastings on the posterior}
+
+We use a coordinate-wise random-walk proposal with Gaussian increments of
+standard deviation $\Sigma=1$, at each step one of $\theta,\psi$ is
+"randomly walked" by $\mathcal{N}(0,\Sigma^{2})$, the other is held fixed. Any proposal with $\theta\le 0$ or $\psi\le 0$ is rejected immediately (these states have zero prior mass under the log-normal prior). The acceptance ratio is the posterior ratio
+\begin{equation}
+    \alpha = \min\left(1,\frac{P(\theta', \psi' | \{x_i\}_{i=1}^{10}) }
+    {P(\theta, \psi | \{x_i\}_{i=1}^{10})} \right)
+\end{equation}
+
+Figure~\ref{fig:posterior} shows the posterior samples for $n=10$
+observations: the chain concentrates sharply around the true $(\theta,\psi)$
+used to generate the data, as expected once the likelihood begins to dominate
+the prior.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.55\linewidth]{plots/day5/posterior_samples_xobs10.png}
+    \caption{Posterior samples from Metropolis--Hastings with $n=10$
+    observations. NOTE: n in title is n_samples for $\theta, \psi$}
+    \label{fig:posteriorx10}
+\end{figure}
+
+
+
+\subsubsection*{(e) Larger samples and numerical stability}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.55\linewidth]{plots/day5/posterior_samples.png}
+    \caption{Posterior samples from Metropolis--Hastings with $n=100$
+    observations. NOTE: n in title is n_samples for $\theta, \psi$}
+    \label{fig:posterior}
+\end{figure}
+
+Repeating with $n=\{100, 1000\}$ for n = 100 it was fine, but when n = 1000 we reach a numerical issue in the likelihood
+$(2\pi\psi)^{-n/2}\exp\!\bigl(-\tfrac{1}{2\psi}\sum(X_{i}-\theta)^{2}\bigr)$
+is zero almost everywhere in the state space, and the acceptance
+ratio $0/0$ leaves the chain stuck or wandering between disconnected modes. as is seen in \autoref{fig:posterior n 1000 numerical issue}: 
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.55\linewidth]{plots/day5/posterior_samples_xobs1000.png}
+    \caption{Posterior samples from Metropolis--Hastings with $n=1000$
+    observations. NOTE: n in title is n_samples for $\theta, \psi$}
+    \label{fig:posterior n 1000 numerical issue}
+\end{figure}
+
+
+one way to solve this is the sampling in log-space:
+\begin{equation}
+    \alpha = min(1, \exp(\log(P(\theta', \psi' | X) - \log(P(\theta, \psi | X)))
+\end{equation}
+and accept iff $ U < \alpha$ for $U\sim\mathrm{Unif}(0,1)$. With this
+change the sampler is well-behaved at $n=1000$ and concentrates even more tightly around the true parameter values (Figure~\ref{fig:posterior_log}). 
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.55\linewidth]{plots/day5/log_posterior_samples.png}
+    \caption{Posterior samples using the log-posterior implementation with
+    $n=1000$ observations.}
+    \label{fig:posterior_log}
+\end{figure}
+
+A thing to notice regarding the proposal distribution. In this case we chose a symmetric distribution namely the gaussian centered at 0, however choosing the correct variance $\Sigma$ is important as well. We conducted a test to see the effect of 3 different values $\Sigma = [0.01, 1, 50]$
+
+Recall the chosen proposal distribution was.
+\begin{equation}
+    h(x,x') = x + \varepsilon, \quad  \varepsilon \sim \mathcal{N}(0,\Sigma),
+\end{equation}
+It was applied coordinate-wise to one of $(\theta,\psi)$ per step. The step size
+$\Sigma$ determines how efficiently the chain explores the state space. 
+
+\subsubsection*{Too small a step ($\Sigma=0.01$)}
+
+With a very small proposal variance almost every move is accepted, but each
+move barely changes the state. The chain moves in tiny increments and
+takes too long to traverse the posterior. The result is
+visible in Figure~\ref{fig:sigma_small}: the empirical density is patchy and multimodal-looking, as is seen by the contours.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[t]{0.48\linewidth}
+        \includegraphics[width=\linewidth]{plots/day5/posterior_samples_xobs10sigma_001.png}
+        \caption{$n=10$ observations.}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.48\linewidth}
+        \includegraphics[width=\linewidth]{plots/day5/log_posterior_samples_sigma_001.png}
+        \caption{$n=1000$ observations (log-posterior).}
+    \end{subfigure}
+    \caption{Posterior samples with $\Sigma=0.01$. The chain takes tiny
+    steps; high acceptance but very slow mixing. The empirical density is
+    rough and shows spurious local structure.}
+    \label{fig:sigma_small}
+\end{figure}
+
+\subsubsection*{Well-tuned step ($\Sigma=1$)}
+
+A proposal standard deviation seems to be of the order as the posteriors' deviations and thereby the empirical density is smooth and unimodal in both axes
+(Figure~\ref{fig:sigma_one}). The $n=1000$ panel is tightly concentrated around the true $(\theta,\psi)$.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[t]{0.48\linewidth}
+        \includegraphics[width=\linewidth]{plots/day5/posterior_samples_xobs10.png}
+        \caption{$n=10$ observations.}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.48\linewidth}
+        \includegraphics[width=\linewidth]{plots/day5/log_posterior_samples.png}
+        \caption{$n=1000$ observations (log-posterior).}
+    \end{subfigure}
+    \caption{Posterior samples with $\Sigma=1$. Smooth, unimodal empirical
+    densities; the chain mixes well across the support.}
+    \label{fig:sigma_one}
+\end{figure}
+
+\subsubsection*{Too large a step ($\Sigma=50$)}
+
+When $\Sigma$ is much larger than the posterior standard deviation, almost every proposal lands far in the tail of the target where the density is low compared to the current state, and the acceptance ratio is therefore small. The chain stays put for long stretches, occasionally jumping to a random distant point that happens to be accepted. The samples in Figure~\ref{fig:sigma_large} are sparse and noisy, the histograms are spiky and the contours just look like noise
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[t]{0.48\linewidth}
+        \includegraphics[width=\linewidth]{plots/day5/posterior_samples_xobs10_sigma50.png}
+        \caption{$n=10$ observations.}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.48\linewidth}
+        \includegraphics[width=\linewidth]{plots/day5/log_posterior_samples_sigma50.png}
+        \caption{$n=1000$ observations (log-posterior).}
+    \end{subfigure}
+    \caption{Posterior samples with $\Sigma=50$. Almost every proposal is
+    rejected; the chain spends long stretches at the same state and the
+    resulting density is sparse and noisy.}
+    \label{fig:sigma_large}
+\end{figure}
+
+Through these examples we have demonstrated how we can sample a complex posterior distribution with the metropolis hastings algorithm and that tuning the variance of the proposal distribution matters. As the number of observations increase the likelihood plays a more important role and the posterior looks gaussian for both parameters. For a large number of observation we had to ensure numerical stablity by doing MH on the log-posterior distribution.
