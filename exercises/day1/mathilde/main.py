@@ -48,8 +48,9 @@ def exercise_c_compare_bad_and_good(sample_size: int, output_dir: Path) -> None:
     print("Exercise c: bad vs good parameters")
     print_stats("  Bad LCG", analyze(bad_values))
     print_stats("  Good LCG", analyze(good_values))
-    # Save bad LCG histogram for part (a) comparison and debugging
+    # Save bad LCG histogram and scatter for part (a) comparison and debugging
     save_histogram(bad_values, output_dir / "bad_lcg_histogram.png", title="Bad LCG histogram")
+    save_scatter(bad_values, output_dir / "bad_lcg_scatter.png", title="Bad LCG scatter plot")
 
 
 def exercise_d_compare_system_generator(sample_size: int, seeds: list[int]) -> None:

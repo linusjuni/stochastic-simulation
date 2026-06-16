@@ -4,10 +4,12 @@ uv run -m exercises.day3.mathilde.main
 """
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import numpy as np
 import scipy.stats as st
+from matplotlib.lines import Line2D
 
 from exercises.day3.mathilde.blocking_system import (
     constant_service,
@@ -38,6 +40,7 @@ def run_config(arrival_gen, service_gen, rng: np.random.Generator) -> tuple[floa
         service = service_gen(N_CUSTOMERS, rng)
         fractions[i] = simulate(interarrival, service, M)
 
+    # sub-sample (independent replications) CI: each run is one sub-sample estimate
     mean = fractions.mean()
     se = fractions.std(ddof=1) / np.sqrt(N_REPS)
     t_crit = st.t.ppf(0.975, df=N_REPS - 1)
@@ -92,21 +95,52 @@ def main() -> None:
         print(f"  {name:<28} {mean:>9.4f} {lo:>9.4f} {hi:>9.4f}  {str(in_ci):>15}")
 
     names = list(results.keys())
-    means = [results[n][0] for n in names]
-    los = [results[n][0] - results[n][1] for n in names]
-    his = [results[n][2] - results[n][0] for n in names]
+    means = np.array([results[n][0] for n in names])
+    los = np.array([results[n][0] - results[n][1] for n in names])
+    his = np.array([results[n][2] - results[n][0] for n in names])
+    in_ci = np.array([results[n][1] <= ERLANG_B <= results[n][2] for n in names])
+    groups = [int(re.search(r"Part (\d)", n).group(1)) for n in names]  # 1/2/3 per row
 
-    with figure(figsize=(10, 6), save=OUT / "comparison.png") as fig:
+    match_c, dev_c, ref_c = "#2ca02c", "#d62728", "#444444"
+
+    with figure(figsize=(11, 7), save=OUT / "comparison.png") as fig:
         ax = fig.add_subplot(111)
         y = np.arange(len(names))
-        ax.errorbar(means, y, xerr=[los, his], fmt="o", capsize=4)
-        ax.axvline(ERLANG_B, color="red", linestyle="--", label=f"Erlang B = {ERLANG_B:.4f}")
+
+        # shade alternate part-groups so the Part 1/2/3 structure is visible
+        for g in set(groups):
+            rows = [i for i, gg in enumerate(groups) if gg == g]
+            if g % 2 == 0:
+                ax.axhspan(min(rows) - 0.5, max(rows) + 0.5, color="#eef1f5", zorder=0)
+
+        # Erlang B reference: faint band + dashed line
+        ax.axvspan(ERLANG_B - 0.002, ERLANG_B + 0.002, color=ref_c, alpha=0.12, zorder=1)
+        ax.axvline(ERLANG_B, color=ref_c, linestyle="--", lw=1.5, zorder=2)
+
+        # one errorbar call per colour so green = matches Erlang B, red = deviates
+        for color, mask in [(match_c, in_ci), (dev_c, ~in_ci)]:
+            ax.errorbar(means[mask], y[mask], xerr=[los[mask], his[mask]], fmt="o",
+                        color=color, ecolor=color, capsize=5, markersize=9,
+                        elinewidth=2, zorder=3)
+
+        # annotate each point with its blocked fraction, just past the error bar
+        for yi, m, h, ok in zip(y, means, his, in_ci):
+            ax.annotate(f"{m:.3f}", (m + h, yi), xytext=(8, 0), textcoords="offset points",
+                        va="center", fontsize=10, color=match_c if ok else dev_c)
+
         ax.set_yticks(y)
         ax.set_yticklabels(names)
-        ax.set_xlabel("blocked fraction")
-        ax.set_title("Blocking probability: simulation vs Erlang B")
-        ax.legend()
+        ax.set_xlabel("Blocked fraction")
+        ax.set_title("Blocking probability: simulation vs. Erlang B")
+        ax.set_xlim(-0.008, 0.165)
         ax.invert_yaxis()
+
+        handles = [
+            Line2D([0], [0], marker="o", lw=0, markersize=9, color=match_c, label="matches Erlang B"),
+            Line2D([0], [0], marker="o", lw=0, markersize=9, color=dev_c, label="deviates from Erlang B"),
+            Line2D([0], [0], color=ref_c, linestyle="--", lw=1.5, label=f"Erlang B = {ERLANG_B:.4f}"),
+        ]
+        ax.legend(handles=handles, loc="lower right", framealpha=0.9)
 
 
 if __name__ == "__main__":
