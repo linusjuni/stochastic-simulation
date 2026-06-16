@@ -44,14 +44,6 @@ def cool_sqrt(k):
 
 def simulated_annealing(cost, n_iter, cooling_fn=cool_log,
                         proposal_fn=swap_proposal, route0=None):
-    """Minimise tour_length over permutations via simulated annealing.
-
-    At iteration k (slide 11): propose Y from the current route, accept if it is
-    no worse, otherwise accept with probability exp(-(f(Y)-f(X)) / T_k). We also
-    remember the best tour ever visited, since the chain's final state need not
-    be the best one seen. cooling_fn(k) gives T_k; proposal_fn(route) the
-    candidate.
-    """
     n = cost.shape[0]
     route = np.random.permutation(n) if route0 is None else route0.copy()
     cur_cost = tour_length(route, cost)
@@ -71,7 +63,7 @@ def simulated_annealing(cost, n_iter, cooling_fn=cool_log,
 
     return best_route, best_cost, history
 
-# ── Part 1: run + plots ─────────────────────────────────────────────────────────
+# Part 1: run + plots
 
 def plot_route(points, route, title, path):
     """Draw the closed tour through the points in the plane."""
@@ -86,7 +78,7 @@ def plot_route(points, route, title, path):
     fig.savefig(path, dpi=130, bbox_inches="tight")
     plt.close(fig)
 
-# ── Part 2: general cost matrix + experiments ───────────────────────────────────
+# Part 2: general cost matrix + experiments
 
 def run_many(cost, n_iter, cooling_fn, proposal_fn, n_runs):
     """Run SA n_runs times from independent random starts (slides: multiple runs
@@ -103,12 +95,6 @@ def run_many(cost, n_iter, cooling_fn, proposal_fn, n_runs):
     return best_costs, top_route, top_curve
 
 def mean_convergence(cost, n_iter, cooling_fn, n_runs, seed):
-    """Average best-so-far curve over n_runs random starts (swap proposal).
-
-    mean_curve[k] is the expected best cost found within a budget of k+1
-    iterations, so the whole curve is a dense iteration-budget sweep. Seeding
-    makes different schedules face identical random starts for a paired
-    comparison."""
     np.random.seed(seed)
     curves = np.empty((n_runs, n_iter))
     for r in range(n_runs):
@@ -121,7 +107,7 @@ if __name__ == "__main__":
     N = 20
     N_ITER = 20000
 
-    # Sanity check: points on a circle. The optimum is to walk the rim, i.e. the
+    # Sanity check: points on a circle. The optimum is to walk around the circle, i.e. the
     # perimeter of the regular N-gon inscribed in the circle, length 2N*sin(pi/N).
     circ = circle_points(N, radius=1.0)
     c_cost = euclidean_cost_matrix(circ)
@@ -140,16 +126,14 @@ if __name__ == "__main__":
     plot_route(pts, p_route, f"Random points (length {p_len:.3f})",
                "part1_random_route.png")
 
-    # ── Part 2 ─────────────────────────────────────────────────────────────────
+    # Part 2
     cost_path = os.path.join(os.path.dirname(__file__), "..", "cost.csv")
     C = np.loadtxt(cost_path, delimiter=",")
     print(f"\n[part2] cost matrix {C.shape}, symmetric = {np.allclose(C, C.T)}")
 
     N_ITER2, N_RUNS = 20000, 10
 
-    # Experiment 1: cooling schedules (swap proposal). Both schedules from the
-    # slides keep T < 1.5, tiny next to cost differences of order 100, so on this
-    # matrix SA accepts almost no uphill moves and behaves like greedy descent.
+    # Experiment 1: cooling schedules (swap proposal)
     schedules = {
         "1/ln(2+k)": cool_log,
         "1/sqrt(1+k)": cool_sqrt,
@@ -193,9 +177,6 @@ if __name__ == "__main__":
     plt.close(fig)
 
     # Experiment 3: does the better schedule depend on the iteration budget?
-    # The mean best-so-far curve at iteration k equals the expected result of a
-    # budget-k run, so one long run per start is a dense budget sweep. Same seed
-    # => both schedules face identical starts (paired comparison).
     BUDGET = 50000
     budget_curves = {
         name: mean_convergence(C, BUDGET, fn, N_RUNS, seed=1)

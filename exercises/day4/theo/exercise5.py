@@ -74,7 +74,7 @@ print(f"Part 4 - Stratified MC\nmean = {mean:.6f}, 95% CI = ({ci[0]:.6f}, {ci[1]
 print(f"  True value: {np.e - 1:.6f}")
 
 # Part 5
-# Modified simulate that also returns sum of inter-arrival times
+# Modified simulate function that also returns sum of inter-arrival times
 def simulate_cv(arrival_fn, service_fn, m, n):
     server_free_at = np.zeros(m)
     t = 0.0

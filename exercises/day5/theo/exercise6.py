@@ -52,7 +52,7 @@ def chi_squared_test(samples, A, m):
     chi2_stat, p_value = stats.chisquare(observed, f_exp=expected)
     return chi2_stat, p_value
 
-# ── Run ───────────────────────────────────────────────────────────────────────
+# Run
 np.random.seed(42)
 n_samples = 20_000          # thinned samples (total chain: 5000 + 20000*10 = 205,000 steps)
 samples = metropolis_hastings_erlang(A, m, n_samples, burn_in=5000, thin=10)
@@ -65,7 +65,7 @@ print(f"P-value:               {p:.4f}")
 print(f"Degrees of freedom:    {m}")
 print(f"Reject H0 (α=0.05):   {p < 0.05}")
 
-# ── Plot ──────────────────────────────────────────────────────────────────────
+# Plot
 probs = theoretical_probs(A, m)
 states = np.arange(m + 1)
 empirical = np.array([np.mean(samples == i) for i in states])
@@ -180,8 +180,6 @@ print(f"Chi-squared: {chi2_2b:.4f}, p-value: {p_2b:.4f}")
 print(f"Reject H0 (α=0.05): {p_2b < 0.05}")
 
 # Part 2(c) – Gibbs sampling with exact conditionals
-# P(i|j) ∝ A1^i/i! for i=0,...,m-j  (truncated Poisson(A1))
-# P(j|i) ∝ A2^j/j! for j=0,...,m-i  (truncated Poisson(A2))
 def sample_truncated_poisson(A, max_val):
     vals = np.arange(max_val + 1)
     raw = np.array([A**k / factorial(k) for k in vals])
@@ -233,9 +231,6 @@ print(f"\n--- Part 3(b): Observations (n={n}) ---")
 print(f"X = {np.round(X, 4)}")
 
 # Part 3(c) – log-posterior up to proportionality
-# log pi(theta,psi|x) ∝ log L + log f(theta,psi)
-# We work in log-space u=log(theta), v=log(psi) for the M-H proposal.
-# The Jacobian +u+v cancels with -log(theta)-log(psi) from the prior.
 def log_posterior_uv(u, v, X):
     n = len(X)
     theta, psi = np.exp(u), np.exp(v)

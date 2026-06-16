@@ -52,14 +52,14 @@ def run_tests(us, label=""):
         p = 2 * (1 - norm.cdf(abs(z)))
         print(f"  h={h}: c_h={c_h:.4f}, z={z:.4f}, p={p:.4f} -> {'REJECT' if p < 0.05 else 'ACCEPT'}")
 
-# Bad LCG: a=42, c=69, M=67 gives a period of only 67 -- clearly a bad generator
+# Bad LCG: a=42, c=69, M=67 gives a period of only 22 - clearly a bad generator
 xs_bad, period_bad = lcg(x_initial=4, a=42, c=69, M=67)
 us_bad = xs_bad / 67
 
 print(f"Bad LCG period: {period_bad}")
 
 fig, axes = plt.subplots(1, 2, figsize=(12, 5))
-fig.suptitle("Bad LCG (a=42, c=69, M=67) -- period=67")
+fig.suptitle("Bad LCG (a=42, c=69, M=67) - period=22")
 axes[0].hist(us_bad, bins=10, range=(0, 1), edgecolor='black')
 axes[0].set_title("Histogram (10 classes)")
 axes[1].scatter(us_bad[:-1], us_bad[1:], s=1, alpha=0.5)
@@ -90,3 +90,27 @@ run_tests(us_good, label="Good LCG (a=1103515245, c=12345, M=2^31)")
 # Part 2: System generator (Mersenne Twister)
 us_sys = np.random.uniform(size=10000)
 run_tests(us_sys, label="System generator (np.random.uniform, Mersenne Twister)")
+
+# Part 3: one sample is not sufficient
+def chi2_pvalue(us, k=10):
+    n = len(us)
+    observed = np.histogram(us, bins=k, range=(0, 1))[0]
+    stat = np.sum((observed - n / k) ** 2 / (n / k))
+    return 1 - chi2.cdf(stat, df=k - 1)
+
+n_rep = 1000
+pvals = np.array([chi2_pvalue(lcg(x_initial=seed, a=1103515245, c=12345, M=M_good)[0] / M_good)
+                  for seed in range(1, n_rep + 1)])
+print(f"\n=== Part 3: sufficiency of a single sample ({n_rep} repetitions) ===")
+print(f"Chi-squared rejection rate at alpha=0.05: {np.mean(pvals < 0.05):.3f} (expected ~0.05)")
+print(f"Mean p-value: {pvals.mean():.3f} (expected ~0.5 if p-values ~ Uniform)")
+
+plt.figure(figsize=(6, 4))
+plt.hist(pvals, bins=20, range=(0, 1), edgecolor='black')
+plt.axhline(n_rep / 20, color='red', linestyle='--', label='Uniform expectation')
+plt.title(f"Part 3: chi-squared p-values over {n_rep} samples (good LCG)")
+plt.xlabel("p-value")
+plt.ylabel("count")
+plt.legend()
+plt.tight_layout()
+plt.show()

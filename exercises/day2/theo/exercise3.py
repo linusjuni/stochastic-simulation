@@ -119,11 +119,7 @@ print(f"  Mean coverage:     {covered_mean}/{n_rep} = {covered_mean/n_rep:.2%}  
 print(f"  Variance coverage: {covered_var}/{n_rep} = {covered_var/n_rep:.2%}  (nominal: 95%)")
 
 # Part 4
-# Composition method for Pareto(k, β=1):
-#   1. Y ~ Gamma(k, 1)
-#   2. Z | Y=y ~ Exp(y)  →  Z = -log(U) / y
-#   3. X = Z + 1  ~  Pareto(k, β=1)
-
+# Composition method for Pareto
 def sample_pareto_composition(n, k, beta=1.0):
     Y = np.random.gamma(shape=k, scale=1.0, size=n)
     Z = np.random.exponential(scale=1.0 / Y)

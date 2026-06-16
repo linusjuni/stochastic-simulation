@@ -18,9 +18,6 @@ def bootstrap_mean_prob(data, a, b, n_boot=100_000):
 
 
 # Part 2: Ross Ch. 8, Exercise 15
-# We estimate sigma^2 by the sample variance S^2 = sum((X_i - X_bar)^2)/(n-1) and
-# want the bootstrap estimate of Var(S^2): draw n_boot resamples (size n, with
-# replacement), compute S^2 on each, then take the sample variance of those S^2.
 def bootstrap_var_of_s2(data, n_boot=100_000):
     data = np.asarray(data, dtype=float)
     n = len(data)
@@ -29,16 +26,12 @@ def bootstrap_var_of_s2(data, n_boot=100_000):
     return s2.var(ddof=1)                          # Var(S^2) across bootstraps
 
 
-# Part 3: bootstrap variance of the mean vs the median for a heavy-tailed sample
-# Pareto (course day-2 parametrisation): F(x) = 1 - (beta/x)^k, x >= beta.
-# With shape k = 1.05 the mean k/(k-1) = 21 is finite but the variance is INFINITE
-# (needs k > 2), so the sample mean is a very imprecise estimator while the median
-# stays well-behaved.
+# Part 3
 def sample_pareto(n, k, beta=1.0):
     U = np.random.default_rng().uniform(size=n)
     return beta * (1 - U) ** (-1 / k)
 
-def bootstrap_variance(data, estimator, n_boot=100_000):
+def bootstrap_variance(data, estimator, n_boot=100):
     """Bootstrap estimate of Var(estimator). estimator must accept an axis kwarg
     (e.g. np.mean, np.median): resample with replacement, apply it per resample,
     then take the variance across the n_boot replicates."""
