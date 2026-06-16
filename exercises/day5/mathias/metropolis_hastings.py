@@ -5,7 +5,6 @@ from math import factorial
 from scipy.stats import norm, expon, pareto, erlang
 
 np.random.seed(42)
-from exercises.day4.mathias.part_one_to_four.variance_reduction_methods import monte_carlo_estimator, CI
 from utils.plotting import histogram
 
 def report(title, mean, confidence_interval):
