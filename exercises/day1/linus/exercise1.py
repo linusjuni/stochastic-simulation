@@ -91,14 +91,14 @@ if __name__ == "__main__":
 
     run_all_tests(samples)
 
-    with figure(figsize=(7, 4), save="exercises/day1/linus/lcg_histogram.png") as fig:
+    with figure(figsize=(7, 4), save="exercises/day1/linus/plots/lcg_histogram.png") as fig:
         ax = fig.add_subplot(111)
         ax.hist(samples, bins=10, edgecolor="white")
         ax.set_xlabel("U")
         ax.set_ylabel("Count")
         ax.set_title("LCG histogram (n=10,000)")
 
-    with figure(figsize=(6, 6), save="exercises/day1/linus/lcg_scatter.png") as fig:
+    with figure(figsize=(6, 6), save="exercises/day1/linus/plots/lcg_scatter.png") as fig:
         ax = fig.add_subplot(111)
         ax.scatter(samples[:-1], samples[1:], s=1, alpha=0.3)
         ax.set_xlabel("$U_i$")
