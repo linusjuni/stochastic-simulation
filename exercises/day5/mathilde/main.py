@@ -22,6 +22,7 @@ A1 = 4.0
 A2 = 4.0
 RHO = 0.5
 N_SAMPLES = 100_000
+DATA_SIZES = (10, 100, 1000)
 OUT = Path(__file__).resolve().parent
 
 def _theoretical_pmf_1d(A: float, m: int) -> np.ndarray:
@@ -90,37 +91,23 @@ def part3_bayesian(rng: np.random.Generator) -> None:
     print("\n=== Part 3: Bayesian Model ===")
     true_theta, true_psi = draw_prior(RHO, rng)
     print(f"  True (theta, psi) drawn from prior: ({true_theta:.4f}, {true_psi:.4f})")
-    
+
     import seaborn as sns
     import matplotlib.pyplot as plt
-    
-    # Generate 100 data points (Mathias used 100 for his posterior plot)
-    X_obs_100 = rng.normal(true_theta, np.sqrt(true_psi), size=100)
-    samples_100 = mh_posterior(X_obs_100, RHO, n_samples=100000, rng=rng, step=1.0, burn_in=10000, thin=10)
-    
-    theta_s = [s[0] for s in samples_100]
-    psi_s = [s[1] for s in samples_100]
-    
-    g = sns.jointplot(x=theta_s, y=psi_s, kind="scatter", alpha=0.3)
-    g.plot_joint(sns.kdeplot, color="red", levels=8, zorder=2)
-    g.figure.suptitle(f"Posterior Samples with rho={RHO}, n=100000", y=1.02)
-    g.set_axis_labels(r"$\theta$", r"$\psi$")
-    g.savefig(OUT / "part3_posterior.png")
-    plt.close()
-    
-    # Generate 1000 data points (Mathias used 1000 for his log posterior plot)
-    X_obs_1000 = rng.normal(true_theta, np.sqrt(true_psi), size=1000)
-    samples_1000 = mh_posterior(X_obs_1000, RHO, n_samples=100000, rng=rng, step=1.0, burn_in=10000, thin=10)
-    
-    theta_s_1000 = [s[0] for s in samples_1000]
-    psi_s_1000 = [s[1] for s in samples_1000]
-    
-    g2 = sns.jointplot(x=theta_s_1000, y=psi_s_1000, kind="scatter", alpha=0.3)
-    g2.plot_joint(sns.kdeplot, color="red", levels=8, zorder=2)
-    g2.figure.suptitle(f"Log Posterior Samples with rho={RHO}, n=100000", y=1.02)
-    g2.set_axis_labels(r"$\theta$", r"$\psi$")
-    g2.savefig(OUT / "part3_log_posterior.png")
-    plt.close()
+
+    for n in DATA_SIZES:
+        X_obs = rng.normal(true_theta, np.sqrt(true_psi), size=n)
+        samples = mh_posterior(X_obs, RHO, n_samples=N_SAMPLES, rng=rng, step=1.0, burn_in=10000, thin=10)
+
+        theta_s, psi_s = samples[:, 0], samples[:, 1]
+        print(f"  n={n:<4}: posterior mean (theta, psi) = ({theta_s.mean():.4f}, {psi_s.mean():.4f})")
+
+        g = sns.jointplot(x=theta_s, y=psi_s, kind="scatter", alpha=0.3)
+        g.plot_joint(sns.kdeplot, color="red", levels=8, zorder=2)
+        g.figure.suptitle(f"Posterior Samples with rho={RHO}, data n={n}", y=1.02)
+        g.set_axis_labels(r"$\theta$", r"$\psi$")
+        g.savefig(OUT / f"part3_posterior_n{n}.png")
+        plt.close()
 
 def main() -> None:
     rng = np.random.default_rng(SEED)
