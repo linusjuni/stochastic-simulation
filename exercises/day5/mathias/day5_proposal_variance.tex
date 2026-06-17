@@ -1,0 +1,123 @@
+\section{Day 5 -- Tuning the proposal variance $\Sigma$}
+
+The Metropolis--Hastings sampler used in Part~3 relies on a symmetric Gaussian
+random-walk proposal
+\begin{equation}
+    h(x,x') \;=\; \mathcal{N}\!\bigl(x'\,\big|\,x,\,\Sigma^{2}\bigr),
+\end{equation}
+applied coordinate-wise to one of $(\theta,\psi)$ per step. The step size
+$\Sigma$ does not affect the stationary distribution -- as long as the chain
+is irreducible the target is still the posterior -- but it does control how
+efficiently the chain explores the state space. We illustrate this by running
+the sampler with $\Sigma\in\{0.01,\;1,\;50\}$ on the same two data sets used
+in Part~3: $n=10$ observations (where we use the posterior on the original
+scale) and $n=1000$ observations (where we use the log-posterior for
+numerical stability). The two extremes bracket the well-tuned case so the
+trade-off is easy to see.
+
+\subsection*{Too small a step ($\Sigma=0.01$)}
+
+With a very small proposal variance almost every move is accepted, but each
+move barely changes the state. The chain wanders in tiny increments and
+takes far too long to traverse the support of the posterior. The result is
+visible in Figure~\ref{fig:sigma_small}: the empirical density is patchy and
+multimodal-looking, with isolated lumps that the kernel density estimator
+turns into spurious contour rings. These ``modes'' are not features of the
+posterior -- they are samples from a single Markov chain that has not had
+time to mix between regions of the same well.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[t]{0.48\linewidth}
+        \includegraphics[width=\linewidth]{plots/day5/posterior_samples_xobs10sigma_001.png}
+        \caption{$n=10$ observations.}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.48\linewidth}
+        \includegraphics[width=\linewidth]{plots/day5/log_posterior_samples_sigma_001.png}
+        \caption{$n=1000$ observations (log-posterior).}
+    \end{subfigure}
+    \caption{Posterior samples with $\Sigma=0.01$. The chain takes tiny
+    steps; high acceptance but very slow mixing. The empirical density is
+    rough and shows spurious local structure.}
+    \label{fig:sigma_small}
+\end{figure}
+
+\subsection*{Well-tuned step ($\Sigma=1$)}
+
+A proposal standard deviation on the same order of magnitude as the
+posterior standard deviation is close to optimal. The acceptance rate sits
+comfortably between the two extremes, the chain visits the bulk of the
+posterior in a reasonable number of steps, and the empirical density is
+smooth and unimodal in both data regimes
+(Figure~\ref{fig:sigma_one}). The $n=1000$ panel is tightly concentrated
+around the true $(\theta,\psi)$, as expected once the likelihood dominates
+the prior.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[t]{0.48\linewidth}
+        \includegraphics[width=\linewidth]{plots/day5/posterior_samples_xobs10.png}
+        \caption{$n=10$ observations.}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.48\linewidth}
+        \includegraphics[width=\linewidth]{plots/day5/log_posterior_samples.png}
+        \caption{$n=1000$ observations (log-posterior).}
+    \end{subfigure}
+    \caption{Posterior samples with $\Sigma=1$. Smooth, unimodal empirical
+    densities; the chain mixes well across the support.}
+    \label{fig:sigma_one}
+\end{figure}
+
+\subsection*{Too large a step ($\Sigma=50$)}
+
+When $\Sigma$ is much larger than the posterior standard deviation, almost
+every proposal lands far in the tail of the target where the density is
+negligible compared to the current state, and the acceptance ratio
+collapses. The chain stays put for long stretches, occasionally jumping to a
+random distant point that happens to be accepted. The samples in
+Figure~\ref{fig:sigma_large} are sparse and ragged: the histograms are
+spiky, the KDE contours fragment into noise, and the $n=1000$ panel in
+particular shows so few distinct accepted states that the kernel density
+estimate is essentially uninformative.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[t]{0.48\linewidth}
+        \includegraphics[width=\linewidth]{plots/day5/posterior_samples_xobs10_sigma50.png}
+        \caption{$n=10$ observations.}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.48\linewidth}
+        \includegraphics[width=\linewidth]{plots/day5/log_posterior_samples_sigma50.png}
+        \caption{$n=1000$ observations (log-posterior).}
+    \end{subfigure}
+    \caption{Posterior samples with $\Sigma=50$. Almost every proposal is
+    rejected; the chain spends long stretches at the same state and the
+    resulting density is sparse and noisy.}
+    \label{fig:sigma_large}
+\end{figure}
+
+\subsection*{Discussion}
+
+The three regimes illustrate the classical Metropolis--Hastings tuning
+trade-off:
+\begin{itemize}
+    \item $\Sigma$ too small $\Rightarrow$ high acceptance, low movement,
+        the chain is locally Brownian and fails to traverse the posterior in
+        the available budget.
+    \item $\Sigma$ too large $\Rightarrow$ low acceptance, the chain is
+        effectively frozen and only occasionally jumps to a usable state.
+    \item $\Sigma$ comparable to the posterior standard deviation
+        $\Rightarrow$ acceptance rate roughly in the $0.2$--$0.5$ range, and
+        the chain explores efficiently.
+\end{itemize}
+The effect is more pronounced for $n=1000$ than for $n=10$ because the
+posterior at $n=1000$ is much narrower: a step of $\Sigma=50$ overshoots the
+posterior by orders of magnitude, while a step of $\Sigma=0.01$ now needs
+thousands of accepted moves to cross even a single posterior standard
+deviation. The well-tuned $\Sigma$ therefore implicitly depends on $n$ --
+in a practical implementation one would either tune $\Sigma$ adaptively
+during a burn-in phase or scale it with an estimate of the posterior
+covariance.
