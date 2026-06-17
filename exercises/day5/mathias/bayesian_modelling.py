@@ -134,23 +134,14 @@ if __name__ == "__main__":
     theta, psi = X[0], Y[0]
     # sample gaussian with mean theta and variance psi
     samples = np.random.normal(loc=theta, scale=np.sqrt(psi), size=10)
-    histogram(
-        samples,
-        discrete=False,
-        kde=True,
-        title=f"Samples from Gaussian with N(theta, psi) (rho={rho}), n=10",
-        xlabel="Value",
-        ylabel="Frequency",
-    )
-    plt.savefig("report/plots/day5/gaussian_samples_theta_psi.png")
-    plt.show()
+    histogram(samples, discrete=False, kde=True, title=f"Samples from Gaussian with N(theta, psi) (rho={rho}), n=10", xlabel="Value", ylabel="Frequency")
+    plt.savefig("exercises/day5/mathias/gaussian_samples_theta_psi.png")
+    # plt.show()
 
     # c) draw posterior samples from prior and likelihood
     Sigma = 1.0
-    X_obs = np.random.normal(loc=theta, scale=np.sqrt(psi), size=100)
-    samples = metropolis_hastings_part2(
-        n_samples, init_state_theta=theta, init_state_psi=psi, X_obs=X_obs, Sigma=Sigma
-    )
+    X_obs = np.random.normal(loc=theta, scale=np.sqrt(psi), size=10)
+    samples = metropolis_hastings_part2(n_samples, init_state_theta=theta, init_state_psi=psi, X_obs=X_obs, Sigma=Sigma)
     burn_in = int(0.1 * len(samples))
     theta_s = [s[0] for s in samples[burn_in:]]
     psi_s = [s[1] for s in samples[burn_in:]]
@@ -158,9 +149,10 @@ if __name__ == "__main__":
     g.plot_joint(sns.kdeplot, color="red", levels=8, zorder=2)
     g.figure.suptitle(f"Posterior Samples with rho={rho}, n={n_samples}", y=1.02)
     g.set_axis_labels(r"$\theta$", r"$\psi$")
-    g.savefig("report/plots/day5/posterior_samples.png")
-    plt.show()
+    g.savefig("exercises/day5/mathias/posterior_samples_xobs10.png")
+    # plt.show()
 
+    
     n_samples = int(1e5)
     Sigma = 1.0
     X_obs = np.random.normal(loc=theta, scale=np.sqrt(psi), size=1000)
@@ -174,5 +166,76 @@ if __name__ == "__main__":
     g.plot_joint(sns.kdeplot, color="red", levels=8, zorder=2)
     g.figure.suptitle(f"Log Posterior Samples with rho={rho}, n={n_samples}", y=1.02)
     g.set_axis_labels(r"$\theta$", r"$\psi$")
-    g.savefig("report/plots/day5/log_posterior_samples.png")
-    plt.show()
+    g.savefig("exercises/day5/mathias/log_posterior_samples.png")
+    # plt.show()
+
+    Sigma = 0.01
+    X_obs = np.random.normal(loc=theta, scale=np.sqrt(psi), size=10)
+    samples = metropolis_hastings_part2(n_samples, init_state_theta=theta, init_state_psi=psi, X_obs=X_obs, Sigma=Sigma)
+    burn_in = int(0.1 * len(samples))
+    theta_s = [s[0] for s in samples[burn_in:]]
+    psi_s = [s[1] for s in samples[burn_in:]]
+    g = sns.jointplot(x=theta_s, y=psi_s, kind="scatter", alpha=0.3)
+    g.plot_joint(sns.kdeplot, color="red", levels=8, zorder=2)
+    g.figure.suptitle(f"Posterior Samples with rho={rho}, n={n_samples}", y=1.02)
+    g.set_axis_labels(r"$\theta$", r"$\psi$")
+    g.savefig("exercises/day5/mathias/posterior_samples_xobs10sigma_001.png")
+    # plt.show()
+
+    
+    n_samples = int(1e5)
+    Sigma = 0.01
+    X_obs = np.random.normal(loc=theta, scale=np.sqrt(psi), size=1000)
+    samples = metropolis_hastings_log(n_samples, init_state_theta=theta, init_state_psi=psi, X_obs=X_obs, Sigma=Sigma)
+    burn_in = int(0.1 * len(samples))
+    theta_s = [s[0] for s in samples[burn_in:]]
+    psi_s = [s[1] for s in samples[burn_in:]]
+    g = sns.jointplot(x=theta_s, y=psi_s, kind="scatter", alpha=0.3)
+    g.plot_joint(sns.kdeplot, color="red", levels=8, zorder=2)
+    g.figure.suptitle(f"Log Posterior Samples with rho={rho}, n={n_samples}", y=1.02)
+    g.set_axis_labels(r"$\theta$", r"$\psi$")
+    g.savefig("exercises/day5/mathias/log_posterior_samples_sigma_001.png")
+    # plt.show()
+
+    Sigma = 50
+    X_obs = np.random.normal(loc=theta, scale=np.sqrt(psi), size=10)
+    samples = metropolis_hastings_part2(n_samples, init_state_theta=theta, init_state_psi=psi, X_obs=X_obs, Sigma=Sigma)
+    burn_in = int(0.1 * len(samples))
+    theta_s = [s[0] for s in samples[burn_in:]]
+    psi_s = [s[1] for s in samples[burn_in:]]
+    g = sns.jointplot(x=theta_s, y=psi_s, kind="scatter", alpha=0.3)
+    g.plot_joint(sns.kdeplot, color="red", levels=8, zorder=2)
+    g.figure.suptitle(f"Posterior Samples with rho={rho}, n={n_samples}", y=1.02)
+    g.set_axis_labels(r"$\theta$", r"$\psi$")
+    g.savefig("exercises/day5/mathias/posterior_samples_xobs10_sigma50.png")
+    # plt.show()
+
+    
+    n_samples = int(1e5)
+    Sigma = 50
+    X_obs = np.random.normal(loc=theta, scale=np.sqrt(psi), size=1000)
+    samples = metropolis_hastings_log(n_samples, init_state_theta=theta, init_state_psi=psi, X_obs=X_obs, Sigma=Sigma)
+    burn_in = int(0.1 * len(samples))
+    theta_s = [s[0] for s in samples[burn_in:]]
+    psi_s = [s[1] for s in samples[burn_in:]]
+    g = sns.jointplot(x=theta_s, y=psi_s, kind="scatter", alpha=0.3)
+    g.plot_joint(sns.kdeplot, color="red", levels=8, zorder=2)
+    g.figure.suptitle(f"Log Posterior Samples with rho={rho}, n={n_samples}", y=1.02)
+    g.set_axis_labels(r"$\theta$", r"$\psi$")
+    g.savefig("exercises/day5/mathias/log_posterior_samples_sigma50.png")
+    # plt.show()
+
+    
+
+
+
+
+    
+
+
+
+
+    
+
+
+
