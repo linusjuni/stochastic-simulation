@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from task1 import simulate, local_recurrence_fractions
+from project1.part1.mathias.part1.task1 import simulate, local_recurrence_fractions
 from utils.logger import get_logger
 from utils.plotting import figure, histogram
 
