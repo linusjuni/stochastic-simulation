@@ -11,6 +11,7 @@ Run with:
     uv run python -m project1.part3.task12
 """
 import numpy as np
+from matplotlib.ticker import MultipleLocator
 
 from utils.logger import get_logger
 from utils.plotting import figure, histogram
@@ -106,3 +107,4 @@ if __name__ == "__main__":
             title="Number of screenings observed per woman (1000 women)",
             xlabel="Series length (number of 48-month screenings)",
         )
+        ax.xaxis.set_major_locator(MultipleLocator(2))
