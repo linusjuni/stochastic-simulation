@@ -5,8 +5,8 @@ import scipy.linalg as la
 from utils.logger import get_logger
 from utils.plotting import figure
 
-from task7 import simulate_continuous_time_markov_chain
-from task8 import empirical_cdf
+from project1.mathias.part2.task7 import simulate_continuous_time_markov_chain
+from project1.mathias.part2.task8 import empirical_cdf
 
 logger = get_logger(__name__)
 
@@ -21,18 +21,6 @@ Q = np.array([
     [0.0, 0.0, 0.0, -0.009, 0.009],
     [0.0, 0.0, 0.0, 0.0, 0.0],
 ])
-"""
-Q=
-     
-∗ 0.0025 0.00125 0 0.001
-0 ∗ 0 0.002 0.005
-0 0 ∗ 0.003 0.005
-0 0 0 ∗ 0.009
-0 0 0 0 0
-     
-
-
-"""
 Q_preventive_treatment = np.array([
     [0, 0.0025, 0.00125, 0.0, 0.001],
     [0.0, 0, 0.0, 0.002, 0.005],

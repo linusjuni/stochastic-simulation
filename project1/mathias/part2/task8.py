@@ -5,7 +5,7 @@ import scipy.linalg as la
 from utils.logger import get_logger
 from utils.plotting import figure
 
-from task7 import simulate_continuous_time_markov_chain
+from project1.mathias.part2.task7 import simulate_continuous_time_markov_chain
 
 logger = get_logger(__name__)
 
