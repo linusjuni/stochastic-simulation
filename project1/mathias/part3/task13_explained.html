@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Task 13: MCEM for a hidden CTMC — intuition</title>
+<style>
+  :root {
+    --bg: #faf8f3;
+    --ink: #1a1a1a;
+    --muted: #6a6a6a;
+    --rule: #1a1a1a;
+    --soft: #efece4;
+    --accent: #c0392b;
+    --c0: #4a7c59; /* state 0 — post-surgery */
+    --c1: #d4a017; /* state 1 — local recurrence */
+    --c2: #5b8db8; /* state 2 — distant metastasis */
+    --c3: #8e5572; /* state 3 — both */
+    --c4: #2c2c2c; /* state 4 — death */
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); }
+  body {
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    font-size: 17px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 60px 28px 120px;
+  }
+  header {
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 18px;
+    margin-bottom: 40px;
+  }
+  .eyebrow {
+    font-family: "Helvetica Neue", Arial, sans-serif;
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  h1 {
+    font-size: 36px;
+    line-height: 1.15;
+    margin: 8px 0 4px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  h2 {
+    font-family: "Helvetica Neue", Arial, sans-serif;
+    font-size: 13px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink);
+    margin: 56px 0 18px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--rule);
+  }
+  h3 {
+    font-family: "Helvetica Neue", Arial, sans-serif;
+    font-size: 14px;
+    letter-spacing: 0.04em;
+    margin: 28px 0 8px;
+    font-weight: 600;
+  }
+  p { margin: 0 0 14px; }
+  .lede {
+    font-size: 19px;
+    line-height: 1.5;
+    color: #333;
+  }
+  .callout {
+    background: var(--soft);
+    border-left: 3px solid var(--accent);
+    padding: 18px 22px;
+    margin: 24px 0;
+  }
+  .callout p:last-child { margin-bottom: 0; }
+  code, .mono {
+    font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.92em;
+    background: var(--soft);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+  .eq {
+    text-align: center;
+    font-family: "Latin Modern Math", "Cambria Math", Cambria, Georgia, serif;
+    font-size: 19px;
+    margin: 18px 0;
+  }
+  .eq em { font-style: italic; }
+  .state {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: "Helvetica Neue", Arial, sans-serif;
+    font-size: 13px;
+    background: white;
+    border: 1px solid #ddd;
+    padding: 2px 9px 2px 6px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .dot {
+    width: 9px; height: 9px; border-radius: 50%;
+    display: inline-block;
+  }
+  .d0 { background: var(--c0); }
+  .d1 { background: var(--c1); }
+  .d2 { background: var(--c2); }
+  .d3 { background: var(--c3); }
+  .d4 { background: var(--c4); }
+
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 10px;
+    margin: 14px 0 26px;
+  }
+
+  /* timeline */
+  .tl-card {
+    background: white;
+    border: 1px solid #e6e2d8;
+    padding: 24px 22px 18px;
+    margin: 18px 0 8px;
+    border-radius: 4px;
+  }
+  .tl-title {
+    font-family: "Helvetica Neue", Arial, sans-serif;
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  svg.timeline { width: 100%; height: 110px; display: block; }
+  svg.timeline text {
+    font-family: "Helvetica Neue", Arial, sans-serif;
+    font-size: 11px;
+    fill: #333;
+  }
+  svg.timeline .axis { stroke: #1a1a1a; stroke-width: 1; }
+  svg.timeline .tick { stroke: #1a1a1a; stroke-width: 1; }
+  svg.timeline .seg-bg { stroke: #d6d2c8; stroke-width: 16; stroke-linecap: butt; }
+  svg.timeline .obs { stroke: var(--accent); stroke-width: 2; }
+  svg.timeline .qmark { font-size: 22px; fill: var(--accent); font-style: italic; font-family: Georgia, serif; }
+  svg.timeline .obs-label {
+    font-family: "Helvetica Neue", Arial, sans-serif;
+    font-size: 11px;
+    fill: var(--accent);
+    font-weight: 600;
+  }
+
+  /* loop diagram */
+  .loop {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin: 14px 0 6px;
+  }
+  .loop .step {
+    background: white;
+    border: 1px solid #e6e2d8;
+    padding: 16px 18px;
+    border-radius: 4px;
+  }
+  .loop .step .num {
+    font-family: "Helvetica Neue", Arial, sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+  .loop .step h4 {
+    font-family: "Helvetica Neue", Arial, sans-serif;
+    font-size: 15px;
+    margin: 0 0 6px;
+  }
+  .loop .step p { font-size: 14px; line-height: 1.45; margin: 0; }
+
+  .small { font-size: 14px; color: #444; }
+  footer {
+    margin-top: 80px; padding-top: 20px;
+    border-top: 1px solid var(--rule);
+    font-size: 13px; color: var(--muted);
+    font-family: "Helvetica Neue", Arial, sans-serif;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">Project 1 · Part 3 · Task 13</div>
+  <h1>Filling in the gaps</h1>
+  <div class="lede">A gentle explanation of the Monte Carlo EM algorithm — what it does, why it works, and how each line of your code maps onto the idea.</div>
+</header>
+
+<div class="legend">
+  <span class="state"><span class="dot d0"></span>0 · cancer removed</span>
+  <span class="state"><span class="dot d1"></span>1 · local recurrence</span>
+  <span class="state"><span class="dot d2"></span>2 · distant metastasis</span>
+  <span class="state"><span class="dot d3"></span>3 · both</span>
+  <span class="state"><span class="dot d4"></span>4 · death</span>
+</div>
+
+<h2>1 · The setup</h2>
+
+<p>In Parts 1 and 2 you <em>simulated</em> a Markov chain. You knew the true transition rates <span class="mono">Q</span>, used them to generate trajectories, and answered questions about those trajectories.</p>
+
+<p>Part 3 flips the problem. Imagine you are a statistician with no access to the simulator. All you have is <strong>screening data from doctors</strong>: every patient is examined every 48 months, and the doctor writes down which state she was in at each visit. That is the entire dataset.</p>
+
+<p>From those sparse snapshots, you want to <strong>recover the rate matrix <span class="mono">Q</span></strong> that governed the underlying process.</p>
+
+<div class="callout">
+  <p><strong>The catch.</strong> If you knew the <em>full</em> trajectory of every patient — every jump, every sojourn time — estimating <span class="mono">Q</span> would be a one-liner:</p>
+  <div class="eq"><em>q<sub>ij</sub></em> = <em>N<sub>ij</sub></em> ⁄ <em>S<sub>i</sub></em></div>
+  <p class="small">where <em>N<sub>ij</sub></em> is the total number of <em>i → j</em> jumps observed across all women, and <em>S<sub>i</sub></em> is the total time spent in state <em>i</em>. But you don't have full trajectories — you have observations every 48 months. So <em>N<sub>ij</sub></em> and <em>S<sub>i</sub></em> are <strong>hidden</strong>.</p>
+</div>
+
+<h2>2 · What we have vs. what we want</h2>
+
+<div class="tl-card">
+  <div class="tl-title">One patient's record at the doctor's office</div>
+  <svg class="timeline" viewBox="0 0 720 110" preserveAspectRatio="xMidYMid meet">
+    <line class="axis" x1="40" y1="80" x2="700" y2="80"/>
+    <!-- ticks -->
+    <line class="tick" x1="40" y1="80" x2="40" y2="86"/>
+    <line class="tick" x1="170" y1="80" x2="170" y2="86"/>
+    <line class="tick" x1="300" y1="80" x2="300" y2="86"/>
+    <line class="tick" x1="430" y1="80" x2="430" y2="86"/>
+    <line class="tick" x1="560" y1="80" x2="560" y2="86"/>
+    <line class="tick" x1="690" y1="80" x2="690" y2="86"/>
+    <text x="40" y="102" text-anchor="middle">0</text>
+    <text x="170" y="102" text-anchor="middle">48</text>
+    <text x="300" y="102" text-anchor="middle">96</text>
+    <text x="430" y="102" text-anchor="middle">144</text>
+    <text x="560" y="102" text-anchor="middle">192</text>
+    <text x="690" y="102" text-anchor="middle">240 (months)</text>
+    <!-- observations as state dots -->
+    <circle cx="40" cy="50" r="11" fill="#4a7c59"/>
+    <text x="40" y="54" text-anchor="middle" fill="white" font-weight="700">0</text>
+    <circle cx="170" cy="50" r="11" fill="#4a7c59"/>
+    <text x="170" y="54" text-anchor="middle" fill="white" font-weight="700">0</text>
+    <circle cx="300" cy="50" r="11" fill="#d4a017"/>
+    <text x="300" y="54" text-anchor="middle" fill="white" font-weight="700">1</text>
+    <circle cx="430" cy="50" r="11" fill="#5b8db8"/>
+    <text x="430" y="54" text-anchor="middle" fill="white" font-weight="700">2</text>
+    <circle cx="560" cy="50" r="11" fill="#8e5572"/>
+    <text x="560" y="54" text-anchor="middle" fill="white" font-weight="700">3</text>
+    <circle cx="690" cy="50" r="11" fill="#2c2c2c"/>
+    <text x="690" y="54" text-anchor="middle" fill="white" font-weight="700">4</text>
+    <!-- question marks in the gaps -->
+    <text x="105" y="32" text-anchor="middle" class="qmark">?</text>
+    <text x="235" y="32" text-anchor="middle" class="qmark">?</text>
+    <text x="365" y="32" text-anchor="middle" class="qmark">?</text>
+    <text x="495" y="32" text-anchor="middle" class="qmark">?</text>
+    <text x="625" y="32" text-anchor="middle" class="qmark">?</text>
+  </svg>
+</div>
+
+<p class="small">Each red question mark is 48 months of hidden behavior. The woman may have jumped through several states and back, or stayed put. We <em>only</em> know the state at the snapshot.</p>
+
+<h2>3 · The big idea: guess, fill in, refine, repeat</h2>
+
+<p>The trick is to break a hard problem (estimate <span class="mono">Q</span> from incomplete data) into two easier problems we can alternate between:</p>
+
+<div class="loop">
+  <div class="step">
+    <div class="num">STEP 1 — IMAGINE</div>
+    <h4>Given a guess of Q, fill in the gaps</h4>
+    <p>For every 48-month gap, simulate a plausible hidden trajectory that <em>lands on</em> the next observation. Use rejection sampling: keep simulating until the endpoint matches.</p>
+  </div>
+  <div class="step">
+    <div class="num">STEP 2 — COUNT</div>
+    <h4>Given filled-in trajectories, re-estimate Q</h4>
+    <p>Now every patient has a complete imaginary history. Count jumps <em>N<sub>ij</sub></em>, total sojourn times <em>S<sub>i</sub></em>. Plug into <span class="mono">q<sub>ij</sub> = N<sub>ij</sub> / S<sub>i</sub></span>. That's your new Q.</p>
+  </div>
+</div>
+
+<p style="margin-top: 18px;">Each pass through these two steps gives a better <span class="mono">Q</span> than the last, because each filled-in trajectory is more realistic when generated under a better <span class="mono">Q</span>. We stop when <span class="mono">Q</span> stops changing meaningfully:</p>
+
+<div class="eq">‖ <em>Q</em><sup>(k+1)</sup> − <em>Q</em><sup>(k)</sup> ‖<sub>∞</sub> &lt; 10<sup>−3</sup></div>
+
+<p class="small">The infinity norm just means the largest single entry change. If no rate moved by more than 0.001 this round, we call it converged.</p>
+
+<h2>4 · How to fill in one gap (rejection sampling)</h2>
+
+<p>This is the heart of the algorithm. Say a patient was observed in state <span class="state"><span class="dot d0"></span>0</span> at month 0 and state <span class="state"><span class="dot d1"></span>1</span> at month 48. To imagine what happened in between:</p>
+
+<div class="tl-card">
+  <div class="tl-title">Bridge between two observations</div>
+  <svg class="timeline" viewBox="0 0 720 110" preserveAspectRatio="xMidYMid meet">
+    <line class="axis" x1="80" y1="80" x2="640" y2="80"/>
+    <line class="tick" x1="80" y1="80" x2="80" y2="86"/>
+    <line class="tick" x1="640" y1="80" x2="640" y2="86"/>
+    <text x="80" y="102" text-anchor="middle">month 0</text>
+    <text x="640" y="102" text-anchor="middle">month 48</text>
+
+    <!-- one accepted attempt: 0 stays, then jumps to 1 at ~32 -->
+    <line x1="80" y1="60" x2="450" y2="60" stroke="#4a7c59" stroke-width="14" stroke-linecap="butt"/>
+    <line x1="450" y1="60" x2="640" y2="60" stroke="#d4a017" stroke-width="14" stroke-linecap="butt"/>
+    <circle cx="80" cy="60" r="9" fill="#4a7c59" stroke="#1a1a1a" stroke-width="2"/>
+    <circle cx="640" cy="60" r="9" fill="#d4a017" stroke="#1a1a1a" stroke-width="2"/>
+    <text x="450" y="46" text-anchor="middle" font-size="11">jump 0→1 here</text>
+    <line x1="450" y1="52" x2="450" y2="68" stroke="#1a1a1a" stroke-width="1"/>
+    <text x="80" y="28" text-anchor="middle" class="obs-label">observed: 0</text>
+    <text x="640" y="28" text-anchor="middle" class="obs-label">observed: 1</text>
+  </svg>
+</div>
+
+<ol style="padding-left: 22px; line-height: 1.7;">
+  <li>Start at state 0 at time 0.</li>
+  <li>Draw an exponential sojourn time using the <em>current guess</em> of <span class="mono">Q</span>. Maybe she stays 18 months, then jumps to state 1.</li>
+  <li>Keep going until 48 months elapse. Note her state at month 48.</li>
+  <li><strong>If</strong> that state equals the next observation (state 1) — <span style="color: var(--c0);">accept</span> the trajectory, record its jumps and sojourns. <strong>If not</strong> — <span style="color: var(--accent);">throw it away</span> and try again.</li>
+</ol>
+
+<p>Doing this for every consecutive pair of observations for every woman fills in the whole hidden history. The "rejection" keeps us honest: the trajectories we keep are exactly those consistent with what the doctor saw.</p>
+
+<div class="callout">
+  <p><strong>Why this is fair.</strong> If our current <span class="mono">Q</span> is the true one, the accepted trajectories are <em>exactly</em> samples from the conditional distribution P(hidden | observed). If our current <span class="mono">Q</span> is wrong, the trajectories are biased — but only as biased as our guess. As <span class="mono">Q</span> improves, the imaginary histories become more realistic, which improves <span class="mono">Q</span> further. That's the EM feedback loop.</p>
+</div>
+
+<h2>5 · Map to your code</h2>
+
+<table style="width:100%; border-collapse: collapse; font-size: 14px;">
+  <thead>
+    <tr style="border-bottom: 1px solid var(--rule);">
+      <th style="text-align: left; padding: 8px 6px; font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;">Concept</th>
+      <th style="text-align: left; padding: 8px 6px; font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;">Function in <span class="mono">task13.py</span></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr style="border-bottom: 1px solid #e6e2d8;">
+      <td style="padding: 10px 6px;">Fill one 48-month gap by rejection sampling</td>
+      <td style="padding: 10px 6px;"><span class="mono">simulate_bridge</span></td>
+    </tr>
+    <tr style="border-bottom: 1px solid #e6e2d8;">
+      <td style="padding: 10px 6px;">Sum <em>N<sub>ij</sub></em> and <em>S<sub>i</sub></em> across all women, all gaps</td>
+      <td style="padding: 10px 6px;"><span class="mono">accumulate_sufficient_statistics</span></td>
+    </tr>
+    <tr style="border-bottom: 1px solid #e6e2d8;">
+      <td style="padding: 10px 6px;">Apply equation (2) to get new <span class="mono">Q</span></td>
+      <td style="padding: 10px 6px;"><span class="mono">update_Q</span></td>
+    </tr>
+    <tr style="border-bottom: 1px solid #e6e2d8;">
+      <td style="padding: 10px 6px;">Outer loop, convergence check</td>
+      <td style="padding: 10px 6px;"><span class="mono">mcem</span></td>
+    </tr>
+    <tr>
+      <td style="padding: 10px 6px;">Initial guess <span class="mono">Q<sup>(0)</sup></span> (uniform allowed rates)</td>
+      <td style="padding: 10px 6px;"><span class="mono">build_initial_Q</span></td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>6 · A one-sentence summary</h2>
+
+<p class="lede">We pretend we know Q, use it to imagine plausible hidden histories that match the doctor's observations, count jumps and sojourns in those imagined histories, recompute Q from the counts, and repeat until Q stops changing.</p>
+
+<footer>
+  Sleep well. When you wake up, open <span class="mono">task13.py</span> next to this page and read each function with this picture in your head.
+</footer>
+
+</div>
+</body>
+</html>

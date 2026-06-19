@@ -25,7 +25,7 @@ def monte_carlo_estimator(samples):
     
 def cov(x,y):
     return np.mean(x * y) - np.mean(x) * np.mean(y)
-def mc_antithetic(samples):
+def mc_antithetic(samples, integrand=integrand):
     n = len(samples)
     X = integrand(samples)
     Y = integrand(1 - samples)
