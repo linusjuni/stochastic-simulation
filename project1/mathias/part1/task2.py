@@ -4,7 +4,7 @@ import time as t
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from project1.part1.mathias.part1.task1 import simulate, local_recurrence_fractions
+from project1.mathias.part1.task1 import simulate, local_recurrence_fractions
 from utils.logger import get_logger
 from utils.plotting import figure, histogram
 

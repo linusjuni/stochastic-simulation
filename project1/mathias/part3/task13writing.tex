@@ -1,0 +1,34 @@
+\subsection*{Task 13}
+
+We would like to recover the rate matrix $Q$ from the coarse observations alone.
+This is an inverse problem: $Q$ generated the data in Task~12, but in practice it
+is unknown, and we ask whether it can be recovered from observations taken only
+every 48 months. Given the full trajectories, the
+rates would follow from the unbiased estimator $q_{ij} = N_{ij}/S_i$
+(equation~(2)), where $N_{ij}$ is the total number of jumps from state $i$ to $j$
+and $S_i$ the total sojourn time in state $i$. These two quantities are exactly
+what we would compute from the full trajectories, but the coarse screenings reveal
+neither the jumps nor the time spent in each state, so they are unobserved. We
+therefore treat them as latent data and recover $Q$ with the Monte-Carlo EM
+algorithm given in the project, which iterates the following from an initial guess
+$Q^{(0)}$ (a small rate on every transition the model permits):
+
+\begin{enumerate}
+    \item \textbf{Reconstructing the hidden history (steps~1--2).} For each pair of
+          consecutive observations 48 months apart, $y \to y'$, we simulate a
+          complete CTMC trajectory over the interval under the current $Q^{(k)}$
+          and keep it only if it ends in the observed state $y'$, resampling
+          otherwise (the rejection scheme suggested in the hint). The retained
+          paths are exactly the trajectories that match both the start and end
+          observation, so their jumps and sojourn times are plausible
+          reconstructions of what happened between screenings; counting them over
+          all 1000 women gives $N_{ij}^{(k)}$ and $S_i^{(k)}$.
+    \item \textbf{Updating the rates (step~3).} Once we have the reconstructed
+          counts and times, we plug them into $q_{ij} = N_{ij}^{(k)}/S_i^{(k)}$
+          (equation~(2)) and set each diagonal entry to the negative sum of its
+          off-diagonal row (equation~(1)), giving the updated rate matrix
+          $Q^{(k+1)}$.
+\end{enumerate}
+
+As suggested in the project, we monitored the change between successive iterates,
+$\|Q^{(k)} - Q^{(k+1)}\|_\infty$, against the threshold $10^{-3}$.

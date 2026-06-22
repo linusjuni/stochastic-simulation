@@ -2,6 +2,8 @@
 import numpy as np
 
 from utils.logger import get_logger
+from utils.plotting import figure
+from utils.settings import Settings
 
 from project1.mathias.part2.task7 import simulate_continuous_time_markov_chain
 from project1.mathias.part3.task12 import (
@@ -11,8 +13,8 @@ from project1.mathias.part3.task12 import (
 )
 
 logger = get_logger(__name__)
-
-RANDOM_NUMBER_GENERATOR = np.random.default_rng(42)
+settings = Settings()
+RANDOM_NUMBER_GENERATOR = np.random.default_rng(settings.SEED)
 NO_OF_WOMEN = 1000
 LAG = 48
 ABSORBING_STATE = 4
@@ -147,6 +149,12 @@ def build_initial_Q(structure_mask, lag=LAG):
         Q_initial[i, i] = -np.sum(Q_initial[i])
     return Q_initial
 
+def from_history_to_diffs(history):
+    diffs = []
+    for i in range(1, len(history)):
+        diff = np.max(np.abs(history[i] - history[i-1]))
+        diffs.append(diff)
+    return diffs
 
 if __name__ == "__main__":
     lifetimes, trajectories = simulate_continuous_time_markov_chain(
@@ -175,3 +183,17 @@ if __name__ == "__main__":
     print(Q_estimated)
     print("\nAbsolute error |Q_est - Q_true|:")
     print(np.abs(Q_estimated - Q))
+
+    diffs = from_history_to_diffs(history)
+    with figure(figsize=(10, 6), save="project1/mathias/part3/figs/mcem_convergence.png") as fig:
+        ax = fig.add_subplot(111)
+        ax.plot(diffs, marker="o")
+        ax.set_yscale("log")
+        ax.set_xlabel("Iteration")
+        ax.set_ylabel("Infinity norm of Q change")
+        ax.set_title("MCEM Convergence (log scale)")
+        ax.axhline(y=CONVERGENCE_TOLERANCE, color="red", linestyle="--", label="Convergence Tolerance")
+        ax.legend()
+        
+        
+        
