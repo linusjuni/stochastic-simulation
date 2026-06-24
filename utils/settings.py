@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     )
 
     SEED: int = Field(default=67)
+    PLOT_STYLE: str = Field(default="ggplot")
 
 
 settings = Settings()
