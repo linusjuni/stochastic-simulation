@@ -1,0 +1,234 @@
+\section*{Theory}
+
+The SIR Model is derived from a population of fixed size $N$ that is partitioned at every time $t$ into categories:
+\newcommand{\sym}[1]{\makebox[1.1em][r]{$#1$}}
+\begin{itemize}
+  \item \sym{S} : \textbf{S}usceptible individuals,
+  \item \sym{I} : \textbf{I}nfectious individuals,
+  \item \sym{R} : \textbf{R}ecovered (or removed/dead) individuals.
+\end{itemize}
+Here $S=S(t)$, $I=I(t)$, $R=R(t)$ denote the sizes of the categories. Because every individual occupies exactly one category and the total population is
+conserved, the state satisfies
+\begin{equation}
+  I_0 + S_0 \;=\; I + S + R \;=\; N ,
+  \label{eq:conservation}
+\end{equation}
+where $N$ is the total population.
+\newline
+\paragraph{Initial conditions.}
+The model is seeded with
+\begin{equation}
+  I_0 = \#\{\text{infected at } t=0\}, \qquad
+  S_0 = N - I_0, \qquad
+  R_0^{\,(\text{init})} = 0 ,
+  \label{eq:ic}
+\end{equation}
+so that the conservation law \eqref{eq:conservation} holds from $t=0$
+onward.\footnote{We write $R_0^{\,(\text{init})}$ for the initial number of
+recovered individuals (which is $0$) to avoid clashing with the basic
+reproduction number $R_0=\beta/\gamma$ introduced in
+Section~\ref{sec:ode}.}
+\newline
+\paragraph{Transition rates}
+Two mechanisms drive the dynamics of the system. The \emph{infection} (arrival into $I$) and
+\emph{recovery} (departure from $I$) rates are
+\begin{equation}
+  \lambda_{\mathrm{inf}}(S,I) = \frac{\beta}{N}\,S\,I,
+  \qquad
+  \lambda_{\mathrm{rec}}(I) = \gamma\, I,
+  \qquad \beta,\gamma \in \mathbb{R}^{+}.
+  \label{eq:rates}
+\end{equation}
+The parameters are interpreted as follows. $\beta$ measures
+\emph{how infectious an individual is} (the effective contact/transmission
+rate); $\gamma$ is the \emph{recovery rate}. Indeed, if r.v. $A$ denotes the time an individual remains infectious,
+\begin{equation}
+  A \sim \mathrm{Exp}(\gamma)
+  \quad\Longrightarrow\quad
+  \mathbb{E}[A] = \frac{1}{\gamma},
+  \label{eq:meaninf}
+\end{equation}
+so $1/\gamma$ is the \emph{average infectious time}.
+
+\section{Deterministic dynamics, SIR modelled from system of ODEs}
+\label{sec:ode}
+
+Replacing the random transitions by their rates gives the deterministic SIR
+system of ordinary differential equations
+\begin{equation}
+  \left\{
+  \begin{aligned}
+    \frac{dS}{dt} &= -\frac{\beta\,S\,I}{N}
+                   &&= -\,\lambda_{\mathrm{inf}}(S,I),\\[4pt]
+    \frac{dI}{dt} &= \frac{\beta\,S\,I}{N} - \gamma I
+                   &&= \;\lambda_{\mathrm{inf}}(S,I) - \lambda_{\mathrm{rec}}(I),\\[4pt]
+    \frac{dR}{dt} &= \gamma I
+                   &&= \;\lambda_{\mathrm{rec}}(I).
+  \end{aligned}
+  \right.
+  \label{eq:ode}
+\end{equation}
+The three equations sum to $\tfrac{d}{dt}(S+I+R)=0$, consistent with the
+conservation law \eqref{eq:conservation}.
+\newline
+\paragraph{Basic reproduction number}
+The dimensionless ratio
+\begin{equation}
+  R_0 = \frac{\beta}{\gamma}
+  \label{eq:R0}
+\end{equation}
+controls the behaviour of the model: \emph{if $R_0 > 1$ an epidemic occurs}
+(the infectious compartment can grow initially), whereas $R_0<1$ leads to
+immediate die-out.
+
+\section{Going stochastic: SIR as a stochastic process}
+
+For finite $N$ the category counts are integer valued and the dynamics are
+stochastic. We model the transitions as a \emph{Poisson arrival process}:
+individuals \emph{arrive} into $I$ (infection) and \emph{depart} from $I$
+(recovery). The nice thing about this is that if you now extend the graph we can now simply update the stochastic system \ref{eq:stoch_balance}.
+
+\begin{center}
+\begin{tikzpicture}[
+    node distance=22mm and 26mm,
+    comp/.style={circle, draw, minimum size=11mm, font=\large},
+    every edge/.style={draw, -{Latex[length=2.5mm]}}
+  ]
+  \node[comp] (S) {$S$};
+  \node[comp, right=of S] (I) {$I$};
+  \node[comp, right=of I] (R) {$R$};
+
+  \draw (S) edge node[above]{Arrival} node[below]{$\lambda_{\mathrm{inf}}$} (I);
+  \draw (I) edge node[above]{Departure} node[below]{$\lambda_{\mathrm{rec}}$} (R);
+\end{tikzpicture}
+\end{center}
+
+The same two rates \eqref{eq:rates} govern the process, and the (now
+operator-level) balance equations read
+\begin{equation}
+  \left\{
+  \begin{aligned}
+    \frac{dS}{dt} &= -\,\lambda_{\mathrm{inf}}(I,S),\\[2pt]
+    \frac{dI}{dt} &= \;\lambda_{\mathrm{inf}}(S,I) - \lambda_{\mathrm{rec}}(I),\\[2pt]
+    \frac{dR}{dt} &= \;\lambda_{\mathrm{rec}}(I).
+  \end{aligned}
+  \right.
+  \label{eq:stoch_balance}
+\end{equation}
+The process is a continuous-time Markov chain on the state space
+$\{(S,I,R)\in\mathbb{Z}_{\ge 0}^3 : S+I+R=N\}$, with only two admissible
+jumps from a state $(S,I,R)$:
+\begin{align}
+  \text{infection:} &\quad (S,I,R)\;\longrightarrow\;(S-1,\,I+1,\,R),
+    && \text{rate } \lambda_{\mathrm{inf}}(S,I),\\
+  \text{recovery:}  &\quad (S,I,R)\;\longrightarrow\;(S,\,I-1,\,R+1),
+    && \text{rate } \lambda_{\mathrm{rec}}(I).
+\end{align}
+
+\section{Embedding in the Markov chain: competing exponential clocks}
+\label{sec:embed}
+\footnote{These derivations are based on the slides regarding markov chains, \eqref{eq:PEA_int} was expanded for understanding.}
+
+Associate to the two possible events independent exponential random variables: an
+\emph{arrival} (infection) r.v. $A$ and a \emph{departure} (recovery) r.v.
+$D$,
+\begin{equation}
+  A \sim \mathrm{Exp}\!\big(\lambda_{\mathrm{inf}}(S,I)\big),
+  \qquad
+  D \sim \mathrm{Exp}\!\big(\lambda_{\mathrm{rec}}(I)\big).
+\end{equation}
+The next event occurs at the first r.v. to be observed,
+\begin{equation}
+  E = \min(A,D),
+\end{equation}
+and the embedding answers two questions: \emph{when} does the next event
+happen (the holding time $E$), and \emph{which} event is it ($E=A$ vs.\ $E=D$).
+
+\subsection{Holding time distribution}
+
+Using independence of $A$ and $D$,
+\begin{equation}
+  P(E>t) = P(A>t,\,D>t) = P(A>t)\,P(D>t)
+         = e^{-\lambda_{\mathrm{inf}}t}\;e^{-\lambda_{\mathrm{rec}}t}
+         = e^{-(\lambda_{\mathrm{inf}}+\lambda_{\mathrm{rec}})t}.
+\end{equation}
+Hence the minimum of the two exponential clocks is again exponential, with rate
+equal to the \emph{sum} of the individual rates:
+\begin{equation}
+  E \sim \mathrm{Exp}\!\big(\lambda_{\mathrm{inf}}+\lambda_{\mathrm{rec}}\big)
+    = \mathrm{Exp}\!\left(\Big(\tfrac{\beta}{N}S+\gamma\Big)I\right),
+  \label{eq:holding}
+\end{equation}
+since
+$\lambda_{\mathrm{inf}}+\lambda_{\mathrm{rec}}
+ = \tfrac{\beta}{N}SI+\gamma I = \big(\tfrac{\beta}{N}S+\gamma\big)I$.
+
+\subsection{Which event occurs}
+
+The probability that the next event is an infection is $P(E=A)=P(A<D)$.
+Conditioning on the arrival time and summing over the infinitesimal intervals
+$[t,t+dt]$,
+\begin{align}
+  P(E=A) = P(A<D)
+  &= \sum P\big(A<D,\; A\in[t,t+dt]\big) \notag\\
+  &= \sum P\big(A<D \mid A\in[t,t+dt]\big)\,P\big(A\in[t,t+dt]\big) \notag\\
+  &\xrightarrow[dt\to 0]{}
+     \int_{0}^{\infty} P\big(A<D \mid A=t\big)\,f_A(t)\,dt .
+  \label{eq:PEA_int}
+\end{align}
+By independence, $P(A<D\mid A=t)=P(D>t)=e^{-\lambda_{\mathrm{rec}}t}$, and
+$f_A(t)=\lambda_{\mathrm{inf}}e^{-\lambda_{\mathrm{inf}}t}$. The integral is the
+standard competing-exponentials computation. Writing it with the board's
+generic rate symbols $\lambda$ (arrival) and $k\mu$ (departure),
+\begin{equation}
+  \int_{0}^{\infty} e^{-k\mu t}\,\lambda e^{-\lambda t}\,dt
+  = \int_{0}^{\infty} \lambda\, e^{-(\lambda+k\mu)t}\,dt
+  = \frac{\lambda}{\lambda + k\mu}.
+  \label{eq:PEA_generic}
+\end{equation}
+Substituting the SIR rates
+\begin{equation}
+  \lambda = \lambda_{\mathrm{inf}} = \frac{\beta SI}{N},
+  \qquad
+  k\mu = \lambda_{\mathrm{rec}} = \gamma I,
+\end{equation}
+gives the explicit selection probability
+\begin{equation}
+  \boxed{\;
+  P(E=A)
+  = \frac{\beta SI/N}{\,\beta SI/N + \gamma I\,}
+  = \frac{\lambda_{\mathrm{inf}}(I,S)}
+         {\lambda_{\mathrm{inf}}(I,S)+\lambda_{\mathrm{rec}}(I)} \; }.
+  \label{eq:PEA}
+\end{equation}
+Consequently $P(E=D)=1-P(E=A)=\dfrac{\gamma I}{\beta SI/N+\gamma I}$.
+
+\section{The Gillespie algorithm}
+
+Equations \eqref{eq:holding} and \eqref{eq:PEA} are now sufficient to do a stochastic
+simulation. From a state $(S,I,R)$:
+
+\begin{enumerate}
+  \item \textbf{Define the random variables}
+        \[
+          A \sim \mathrm{Exp}\!\big(\lambda_{\mathrm{inf}}(S,I)\big),\qquad
+          D \sim \mathrm{Exp}\!\big(\lambda_{\mathrm{rec}}(I)\big),\qquad
+          E = \min(A,D).
+        \]
+  \item \textbf{Draw} $U \sim \mathrm{Uniform}(0,1)$.
+  \item \textbf{Select the event} using \eqref{eq:PEA}:
+        \[
+          \begin{cases}
+            \text{if } U \le P(E=A): &
+              (S,I,R)\;\longrightarrow\;(S-1,\,I+1,\,R)
+              \quad\text{(infection)},\\[4pt]
+            \text{else } \big(U > P(E=A)\big): &
+              (S,I,R)\;\longrightarrow\;(S,\,I-1,\,R+1)
+              \quad\text{(recovery)}.
+          \end{cases}
+        \]
+  \item \textbf{Advance time} by the holding time, $t \leftarrow t + E$, and
+        repeat until $I=0$ (no further events are possible).
+\end{enumerate}
+
+Notice if new rates are introduce to model differently it would instead of being a binary decision be chosen for categorical distribution. 
