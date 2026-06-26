@@ -61,6 +61,20 @@ if __name__ == "__main__":
     minor_sizes = final_sizes[final_sizes < threshold]
     major_sizes = final_sizes[final_sizes >= threshold]
 
+    # A handful of runs cross the threshold but still fizzle far below the
+    # epidemic mode (e.g. R(inf) ~ 10-15). They sit in the empty gap and stretch
+    # the major panel's x-axis from 0 to N, squashing the real blob into a
+    # sliver. Drop them from the *display* only -- the statistics above use all
+    # runs, so P(disappear) is unaffected.
+    EPIDEMIC_FLOOR = 0.5 * N  # everything between threshold and here is the gap
+    epidemic_sizes = major_sizes[major_sizes >= EPIDEMIC_FLOOR]
+    n_borderline = major_sizes.size - epidemic_sizes.size
+    logger.info(
+        "Borderline runs omitted from major panel (display only)",
+        n=int(n_borderline),
+        floor=int(EPIDEMIC_FLOOR),
+    )
+
     with figure(
         figsize=(11, 4.5), save="project2/linus/plots/part1/final_size_distribution.png"
     ) as fig:
@@ -78,12 +92,15 @@ if __name__ == "__main__":
         )
         ax_minor.legend()
 
+        # Match the left panel's bin size: both use width-1 bins (one bar per
+        # individual), so the two histograms are directly comparable.
+        lo, hi = int(epidemic_sizes.min()), int(epidemic_sizes.max())
         ax_major = fig.add_subplot(122)
         histogram(
-            major_sizes,
+            epidemic_sizes,
             ax=ax_major,
-            bins=30,
-            title=f"Major epidemics  (n={major_sizes.size})",
+            bins=np.arange(lo - 0.5, hi + 1.5, 1.0),
+            title=f"Major epidemics  (n={epidemic_sizes.size})",
             xlabel="Total ever infected, R(∞)",
         )
 
