@@ -134,11 +134,11 @@ if __name__ == "__main__":
     hi_cov = np.array([e.upper for e in est_cov])
 
     with figure(
-        figsize=(8, 5),
-        save="project2/mathilde/plots/part2/vaccination_extinction_vs_ve.png",
+        figsize=(12, 5),
+        save="project2/mathilde/plots/part2/vaccination_extinction_sweeps.png",
     ) as fig:
-        ax = fig.add_subplot(111)
-        ax.errorbar(
+        ax_ve = fig.add_subplot(121)
+        ax_ve.errorbar(
             VE_SWEEP,
             means_ve,
             yerr=[means_ve - lo_ve, hi_ve - means_ve],
@@ -147,19 +147,13 @@ if __name__ == "__main__":
             label="simulation (95% CI)",
             capsize=3,
         )
-        ax.plot(VE_SWEEP, theory_ve, "--", color="black", label=r"theory $(1/R_v)^{I_0}$")
-        ax.axvline(ve_c, color="red", linestyle=":", label=f"$ve_c$ = {ve_c:.2f}")
-        ax.set_xlabel("Vaccine effectiveness, ve")
-        ax.set_ylabel("P(disease disappears)")
-        ax.set_title(f"Effect of vaccine effectiveness (coverage={COVERAGE_FIXED:.0%}, N={N}, R0={R0:.0f})")
-        ax.legend()
+        ax_ve.plot(VE_SWEEP, theory_ve, "--", color="black", label=r"theory $(1/R_v)^{I_0}$")
+        ax_ve.axvline(ve_c, color="red", linestyle=":", label=r"critical value ($R_v$ = 1)")
+        ax_ve.set_xlabel("Vaccine effectiveness, ve")
+        ax_ve.set_ylabel("P(disease disappears)")
 
-    with figure(
-        figsize=(8, 5),
-        save="project2/mathilde/plots/part2/vaccination_extinction_vs_coverage.png",
-    ) as fig:
-        ax = fig.add_subplot(111)
-        ax.errorbar(
+        ax_cov = fig.add_subplot(122)
+        ax_cov.errorbar(
             COVERAGE_SWEEP,
             means_cov,
             yerr=[means_cov - lo_cov, hi_cov - means_cov],
@@ -168,12 +162,13 @@ if __name__ == "__main__":
             label="simulation (95% CI)",
             capsize=3,
         )
-        ax.plot(COVERAGE_SWEEP, theory_cov, "--", color="black", label=r"theory $(1/R_v)^{I_0}$")
-        ax.axvline(coverage_c, color="red", linestyle=":", label=f"$v_c$ = {coverage_c:.2f}")
-        ax.set_xlabel("Vaccination coverage, p")
-        ax.set_ylabel("P(disease disappears)")
-        ax.set_title(f"Effect of vaccination coverage (ve={VE_FIXED:.0%}, N={N}, R0={R0:.0f})")
-        ax.legend()
+        ax_cov.plot(COVERAGE_SWEEP, theory_cov, "--", color="black", label=r"theory $(1/R_v)^{I_0}$")
+        ax_cov.axvline(coverage_c, color="red", linestyle=":", label=r"critical value ($R_v$ = 1)")
+        ax_cov.set_xlabel("Vaccination coverage, p")
+        ax_cov.set_ylabel("P(disease disappears)")
+
+        handles, labels = ax_ve.get_legend_handles_labels()
+        fig.legend(handles, labels, loc="upper center", ncol=3, frameon=True)
 
     attack_mean = np.array([fs.mean() / N for fs in final_sizes_ve])
     attack_lo = np.array(
