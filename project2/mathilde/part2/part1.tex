@@ -1,0 +1,261 @@
+\section*{A}
+\label{sec:taska}
+
+We ask how likely it is that the disease dies out instead of growing into a big
+outbreak. In a closed SIR model every run ends with $I=0$ sooner or later,
+because in the end there is no one left to infect. So ``disappear'' cannot mean
+``$I$ reaches $0$'' -- that always happens. It means a minor outbreak:
+the disease fizzles out early and only a few people are ever infected, instead
+of a major epidemic that infects a large part of the population. We
+measure the outbreak by the final size $R_\infty$, the total number of people
+ever infected, and call a run ``disappeared'' if $R_\infty$ stays below a small
+threshold (we use $1\%$ of $N$, i.e.\ a cutoff of $10$ for the $N=1000$ runs
+below).
+
+A simple formula predicts this probability. At the very start almost everyone is
+susceptible ($S\approx N$), so one infected person makes new infections at rate
+$\beta$ and recovers at rate $\gamma$, and before recovering it infects on
+average $R_0=\beta/\gamma$ others (\autoref{eq:R0}). While $I$ is still small,
+the spread behaves like a simple branching process: each infected person starts
+its own chain, and the chains do not yet bump into each other.
+
+Let $q$ be the probability that one such chain eventually dies out. We find $q$
+by conditioning on the first event of a single infected person. That
+person has two exponential clocks running at once: a recovery clock of rate
+$\gamma$ and an infection clock of rate $\tfrac{\beta}{N}S\approx\beta$ (since
+$S\approx N$ early on). Whichever rings first is the next event, and for two
+competing exponential clocks of rates $a$ and $b$ the ``$a$'' clock wins with
+probability $a/(a+b)$ -- the same competing-clocks result we used for the event
+selection in \autoref{eq:PEA}. Hence the person recovers first with probability
+$\gamma/(\beta+\gamma)$ and infects first with probability $\beta/(\beta+\gamma)$.
+\begin{itemize}
+  \item If it recovers first, nobody was infected and the chain stops --
+        it has died out for certain.
+  \item If it infects first, there are now two infectives. Each one
+        starts a fresh chain that is statistically identical to the original, so
+        each dies out with the same probability $q$; being independent, they
+        both die out with probability $q\cdot q=q^2$.
+\end{itemize}
+Adding the two disjoint cases (and noting $q$ reappears because after an
+infection we face the same problem again) gives a self-consistency equation
+\begin{equation}
+  q = \frac{\gamma}{\beta+\gamma} + \frac{\beta}{\beta+\gamma}\,q^2,
+  \label{eq:qfix}
+\end{equation}
+i.e.\ $\beta q^2 - (\beta+\gamma)q + \gamma = 0$, which factors as
+$(q-1)(\beta q-\gamma)=0$ with roots $q=1$ and $q=\gamma/\beta=1/R_0$. The true
+extinction probability of a branching process is the smallest root in
+$[0,1]$, so
+\begin{equation}
+  q =
+  \begin{cases}
+    1/R_0, & R_0 > 1,\\
+    1,     & R_0 \le 1.
+  \end{cases}
+  \label{eq:q}
+\end{equation}
+The $I_0$ starting infectives spread independently, so the disease disappears
+only if all of their chains die out:
+\begin{equation}
+  P(\text{disease disappears}) = q^{\,I_0} = \left(\frac{1}{R_0}\right)^{I_0}
+  \quad (R_0 > 1).
+  \label{eq:pdisappear}
+\end{equation}
+This matches the qualitative picture in the \nameref{sec:ode} section: for $R_0 \le 1$ the
+disease always dies out ($P=1$), and the more infectious it is (larger $R_0$),
+the less likely it is to disappear.
+
+To test this, we first fix $N=1000$, $R_0=3$ and $I_0=1$ and run $2000$
+independent simulations, estimating $P(\text{disease disappears})$ as the fraction of
+minor outbreaks with a $95\%$ confidence interval from the replications:
+\[
+  \hat{P}(\text{disease disappears}) = 0.335 \pm 0.021,
+  \qquad
+  \text{theory } (1/R_0)^{I_0} = 0.333 .
+\]
+The two agree. \autoref{fig:final_size} also shows why the question makes sense:
+the final size $R_\infty$ is strongly bimodal -- a spike of minor
+outbreaks near zero and a separate bump of major epidemics near
+$R_\infty\approx 940$, with an empty gap between them. Because of this gap the
+exact threshold does not matter.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\linewidth]{part1//media/final_size_distribution.png}
+  \caption{Final size $R_\infty$ over $2000$ runs ($N=1000$, $R_0=3$, $I_0=1$).
+  The distribution is bimodal: minor outbreaks (left) and major epidemics
+  (right). Both panels use the same bin width.}
+  \label{fig:final_size}
+\end{figure}
+
+We then sweep the parameters to check \autoref{eq:pdisappear} more broadly
+($1000$ runs per point), shown in \autoref{fig:extinction_sweep}. Sweeping $R_0$
+(left, $I_0=1$), $P(\text{disease disappears})$ drops from about $1$ towards $0$ as the
+disease becomes more infectious and follows the $(1/R_0)^{I_0}$ curve. Sweeping
+$I_0$ (right, $R_0=3$), it falls geometrically and is a straight line on the log
+axis, which confirms the exponent $I_0$ in \autoref{eq:pdisappear}.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\linewidth]{part1//media/extinction_sweep.png}
+  \caption{$P(\text{disease disappears})$ versus $R_0$ (left) and versus $I_0$ (right,
+  log scale), with $95\%$ confidence intervals. Dashed line is the theory
+  $(1/R_0)^{I_0}$.}
+  \label{fig:extinction_sweep}
+\end{figure}
+
+Two small mismatches are worth noting. Near $R_0=1$ the simulation sits a little
+below the theory (e.g.\ $R_0=1.2$: $0.76$ vs.\ $0.83$), because the branching
+formula assumes an endless supply of susceptibles; close to $R_0=1$ outbreaks
+are slow and the finite population makes them die out more often than the
+formula predicts. For $R_0<1$ the estimate is not exactly $1$ either, because
+with a finite population a few runs still cross the small threshold by chance.
+Both effects are finite-population artefacts and should vanish as $N\to\infty$,
+where the endless-susceptibles assumption becomes exact. \autoref{fig:finite_n}
+confirms this: fixing each of the two awkward cases ($R_0=0.8$ and $R_0=1.2$,
+$I_0=1$) and sweeping $N$, the estimate climbs monotonically onto the theory line
+as $N$ grows (for $R_0=1.2$, from $0.58$ at $N=250$ to $0.83$ at $N=8000$,
+matching $1/R_0=0.833$). This is also the mechanism behind question~(d): the
+larger the population, the better the susceptible pool matches the
+infinite-population assumption that the deterministic and branching descriptions
+rely on.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.5\linewidth]{part1//media/extinction_finite_n.png}
+  \caption{$P(\text{disease disappears})$ versus population size $N$ (log axis, $1000$ runs
+  per point, $I_0=1$) for the two cases where the branching formula is least
+  accurate. Dashed lines are the population-independent theory $(1/R_0)^{I_0}$.
+  Both curves converge onto the theory as $N$ grows, confirming that the
+  mismatches in \autoref{fig:extinction_sweep} are finite-population effects.}
+  \label{fig:finite_n}
+\end{figure}
+\section*{B}
+\label{sec:taskb}
+
+Here we ask a simple question: can the disease come back again and again in
+repeated waves, instead of just sweeping through once? In the plain SIR model the
+answer is no. The reason is easy to see: the number of people who can still catch
+the disease, $S$, only ever goes down. People move from $S$ to $I$ to $R$ and
+never come back. So once everyone has been infected and recovered, there is no
+one left to infect, and the outbreak is a single wave that ends at $I=0$ and stays
+there (\autoref{fig:sir_wave}). Nothing refills $S$, so a second wave can never
+start.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.5\linewidth]{part1//media/sir_single_run.png}
+  \caption{One stochastic SIR run ($N=1000$, $R_0=3$). It is a single wave: $S$
+  only falls, $I$ goes up once and then back to $0$. No cycles are possible
+  because no one ever becomes susceptible again.}
+  \label{fig:sir_wave}
+\end{figure}
+
+To get repeated waves, we need a way to put people back into $S$. The easiest one
+is fading immunity: after a while, recovered people lose their protection and can
+catch the disease again. Now, we are not doctors or anything, but this seems to be
+roughly what happens with diseases like the flu or COVID -- the protection you get
+from being sick does not last forever. This just adds one new move, $R\to S$,
+happening at rate $\omega$. The model is now called SIRS. It is the same SIR chain as before, but
+with one extra arrow that loops $R$ back to $S$:
+
+\begin{center}
+\begin{tikzpicture}[
+    node distance=22mm and 26mm,
+    comp/.style={circle, draw, minimum size=11mm, font=\large},
+    every edge/.style={draw, -{Latex[length=2.5mm]}}
+  ]
+  \node[comp] (S) {$S$};
+  \node[comp, right=of S] (I) {$I$};
+  \node[comp, right=of I] (R) {$R$};
+
+  \draw (S) edge node[above]{$\tfrac{\beta}{N}SI$} (I);
+  \draw (I) edge node[above]{$\gamma I$} (R);
+  \draw (R) edge[bend left=50] node[below]{$\omega R$ (waning)} (S);
+\end{tikzpicture}
+\end{center}
+
+\noindent Written as equations it is
+\begin{equation}
+  \left\{
+  \begin{aligned}
+    \frac{dS}{dt} &= -\frac{\beta\,S\,I}{N} + \omega R,\\[4pt]
+    \frac{dI}{dt} &= \frac{\beta\,S\,I}{N} - \gamma I,\\[4pt]
+    \frac{dR}{dt} &= \gamma I - \omega R.
+  \end{aligned}
+  \right.
+  \label{eq:sirs_ode}
+\end{equation}
+which is the same as the SIR equations (\autoref{eq:ode}) plus the one extra term
+$\omega R$ that sends recovered people back to $S$. Because people keep coming
+back to $S$, the disease no longer has to disappear. If $R_0>1$
+(\autoref{eq:R0}), the disease can stay around forever at a steady level, where
+the number of infected people sits at
+\begin{equation}
+  S^\star = \frac{N}{R_0},
+  \qquad
+  I^\star = N\Bigl(1-\tfrac{1}{R_0}\Bigr)\frac{\omega}{\omega+\gamma}.
+  \label{eq:endemic}
+\end{equation}
+We call $I^\star$ the steady (endemic) level.
+
+What does this steady level look like as the system settles down? If we just
+solve the equations (\autoref{eq:sirs_ode}), the number of infected people
+wobbles up and down a few times, with each wobble smaller than the last, until it
+flattens out at $I^\star$. So the plain equations do make waves, but the waves
+shrink and die away. More precisely, it can be shown that linearising
+\autoref{eq:sirs_ode} about the endemic equilibrium \eqref{eq:endemic} yields a
+Jacobian whose eigenvalues have negative real part, so the equilibrium is stable.
+For our parameters (in particular a small waning rate $\omega$) these eigenvalues
+form a complex-conjugate pair, making the equilibrium a stable
+focus,\footnote{This linear stability classification -- real eigenvalues
+(node, overdamped) versus a complex-conjugate pair (focus, damped oscillation) --
+is exactly the kind of analysis some of us saw in 01617 Introduction to Dynamical
+Systems.} so $I(t)$
+returns to $I^\star$ through damped oscillations whose amplitude decays
+exponentially -- for a large enough $\omega$ the eigenvalues are instead real and
+the approach is overdamped, with no oscillation at all. Either way the
+deterministic model predicts only a transient, not a sustained cycle -- after it
+dies out, $I(t)\to I^\star$ constant.
+
+The simulation behaves differently, and this is the interesting part.
+\autoref{fig:sirs_cycles} shows one SIRS simulation ($N=20\,000$, $R_0=5$,
+$\gamma=0.1$, $\omega=0.002$) started near the steady level, drawn on top of the
+smooth equation curve that starts from the same place. At the start, when the
+system is still far from the steady level, the simulation closely follows the
+smooth curve. But once it gets near the steady level, something changes. In a real
+(finite) population, people get infected and recover one at a time, at random
+moments. These little random bumps keep nudging the system, so instead of
+flattening out, the simulated number of infected people keeps wobbling up and down
+forever. The smooth equation has no randomness, so it flattens; the simulation
+never does.
+
+The two curves wobble about as often, but not at the same times, so after the
+first wave they stop lining up -- the random bumps slowly shift the timing of the
+simulated waves. The picture on the right shows the same thing in another way: the
+smooth curve spirals inward and stops at the steady point, while the noisy
+simulation keeps circling around it and never settles.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\linewidth]{part1//media/sirs_cycles.png}
+  \caption{SIRS near the steady level ($N=20\,000$, $R_0=5$, $\gamma=0.1$,
+  $\omega=0.002$). Left: infected over time, simulation (red) vs. the smooth
+  equation (black). The equation flattens out at $I^\star$, the simulation keeps
+  making waves. Right: the same runs drawn as $S$ against $I$ -- the equation
+  spirals into the steady point, the simulation keeps circling it. Both start from
+  the same state.}
+  \label{fig:sirs_cycles}
+\end{figure}
+
+So yes, the disease can show cyclical behaviour -- but only in the simulation, not
+in the plain equations. Just like the disease dying out by chance in
+\nameref{sec:taska}, this is something the smooth equations miss completely. The
+equations let the waves fade away -- the real, finite population keeps them going,
+because real people come in whole numbers and get sick at random times. This is
+the same lesson as in question~(a): when the population is finite,
+randomness can change the whole behaviour, not just the small details. One thing
+to keep in mind: in a small population, a random dip can take $I$ all the way to
+$0$, and then the disease is gone for good (nothing brings it back). So the waves
+only keep going if the population is big enough that $I^\star$ stays well above
+zero, which is why we use a large $N=20\,000$ here.
