@@ -3,23 +3,6 @@
 # They have been used for synthesizing, code structering, coding, and verification.
 # The author takes full responsibility for all content and decisions in this file.
 
-"""Part I(c), experiment 3 — reinfection collapses society at far lower lethality.
-
-Plain SIRD caps the death toll at about CFR: the recovered class is a permanent
-immune refuge, so society collapses (>= 95% dead) only for a near-totally lethal
-disease (experiment 1). Letting immunity *wane* (recovered return to S, the SIRSD
-model with rate omega) removes that refuge: the disease recirculates and, because
-death is the only permanent sink, grinds the population down -- so even a modestly
-lethal disease can collapse society.
-
-Two figures:
-  1. A single SIRSD run: sustained transmission grinding S + R into D.
-  2. P(societal collapse, D >= 0.95 N) vs CFR for omega = 0 (SIRD) and omega > 0
-     (SIRSD) -- waning immunity shifts collapse to much lower CFR.
-
-Run:  uv run python -m project2.theo.part1.reinfection_extinction
-"""
-
 import numpy as np
 
 from project2.theo.analysis import confidence_interval, replicate

@@ -3,26 +3,6 @@
 # They have been used for synthesizing, code structering, coding, and verification.
 # The author takes full responsibility for all content and decisions in this file.
 
-"""Part I(c), experiment 2 — collapse is robust; literal extinction is a fragile tail.
-
-Take the deadliest SIRD: gamma = 0, so CFR = 1 (no recovery). With no immune
-refuge, a major outbreak destroys almost the whole population. We compare two
-outcome definitions across population size N and the two force-of-infection
-conventions ("fixed" = beta*S*I/N0 mass action, "living" = beta*S*I/(S+I+R)):
-
-  * Societal COLLAPSE      D >= 0.95 N   -- the robust, meaningful measure.
-  * Literal EXTINCTION     D == N        -- every last individual, a brittle tail.
-
-Result: collapse happens with probability ~1 for *both* conventions at all N --
-the population is destroyed regardless of the contact model. Literal extinction,
-by contrast, is fragile: under "fixed" mass action a deterministic cushion of
-N*z survivors (z = escape fraction) escapes, so P(D=N) ~ exp(-N z) -> 0 as N grows;
-only the "living" convention drives it to 1. The denominator decides the last
-0.7% of survivors, not whether society collapses.
-
-Run:  uv run python -m project2.theo.part1.finite_n_extinction
-"""
-
 import numpy as np
 
 from project2.theo.analysis import confidence_interval, replicate

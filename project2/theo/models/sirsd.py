@@ -12,21 +12,6 @@ from project2.theo.models.sird import SIRD
 
 
 class SIRSD(SIRD):
-    """SIRD with *waning immunity* (Part I(c), experiment 3).
-
-    Adds a single transition to :class:`SIRD`: recovered individuals lose their
-    immunity and return to the susceptible pool, ``R -> S`` at rate ``omega * R``.
-
-    With ``omega > 0`` there is no permanent immune refuge, so the disease can
-    keep recirculating (recurrent waves) instead of burning out. Because death
-    (``D``) is the only permanent sink, a sustained outbreak grinds the living
-    population down -- opening a route to total population extinction *even when
-    recovery is possible* (CFR < 1), unlike plain SIRD. ``omega = 0`` recovers
-    the ordinary SIRD.
-
-    Mean immunity duration is ``1 / omega``.
-    """
-
     def __init__(
         self,
         *,

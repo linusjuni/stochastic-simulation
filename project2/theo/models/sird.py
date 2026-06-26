@@ -11,21 +11,6 @@ from project2.theo.models.base import CompartmentalModel, Transition
 
 
 class SIRD(CompartmentalModel):
-    """Stochastic SIR with disease-induced mortality (Part I(c)).
-
-    A fourth compartment ``D`` (dead) is added to the classic SIR. An infected
-    individual leaves ``I`` through two *competing* events: recovery to ``R``
-    (immune, alive) at rate ``gamma`` or death to ``D`` at rate ``mu``.
-
-    The force-of-infection denominator is selectable via ``foi``:
-    ``"living"`` (default) divides by the *current* living population
-    ``S + I + R`` -- frequency-dependent, since the dead no longer make contacts;
-    ``"fixed"`` divides by the initial population ``N0`` -- classic mass action.
-    For a deadly disease the two differ sharply: see Part I(c), experiment 2.
-    (The base class' ``population`` counts every compartment, including ``D``,
-    so it must NOT be used here.)
-    """
-
     compartments = ("S", "I", "R", "D")
 
     def __init__(
@@ -48,7 +33,6 @@ class SIRD(CompartmentalModel):
         self.gamma = gamma
         self.mu = mu
         self.foi = foi
-        #: initial living population — the fixed force-of-infection denominator
         self.N0 = S + I + R
 
     @property

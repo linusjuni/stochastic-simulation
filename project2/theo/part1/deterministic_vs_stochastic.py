@@ -3,24 +3,6 @@
 # They have been used for synthesizing, code structering, coding, and verification.
 # The author takes full responsibility for all content and decisions in this file.
 
-"""Part I(d) - when is the deterministic SIR ODE precise enough?
-
-Compares the classical deterministic SIR ODE (the N -> infinity limit) against the
-stochastic SIR simulation (our SIRD with mu = 0) as a function of population size N,
-at fixed R0 = 3 (beta = 0.3, gamma = 0.1) with a single index case I0 = 1.
-
-Three figures:
-  1. Trajectory overlay at small vs large N -- stochastic runs scattering around
-     the ODE, the scatter shrinking as N grows.
-  2. Quantitative precision vs N: relative error of the *major-outbreak* mean
-     (final size, peak) -> 0, and the fluctuation CV ~ 1/sqrt(N), with a 5% line.
-  3. Bimodal final-size histogram: the ODE predicts one number, but the stochastic
-     final size is bimodal -- a minor-outbreak mode (~(1/R0)^I0 of runs) that the
-     deterministic model cannot represent at all.
-
-Run:  uv run python -m project2.theo.part1.deterministic_vs_stochastic
-"""
-
 import numpy as np
 
 from project2.theo.models import SIRD

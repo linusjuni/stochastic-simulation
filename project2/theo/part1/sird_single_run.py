@@ -3,15 +3,6 @@
 # They have been used for synthesizing, code structering, coding, and verification.
 # The author takes full responsibility for all content and decisions in this file.
 
-"""Part I(c) — a single stochastic SIRD outbreak of a deadly disease.
-
-Runs one realisation of the SIRD model and plots the S/I/R/D trajectories. The
-point of interest versus plain SIR is the dead compartment D: at the end of the
-outbreak D(inf) is the death toll and S(inf) + R(inf) are the survivors.
-
-Run:  uv run python -m project2.theo.part1.sird_single_run
-"""
-
 import numpy as np
 
 from project2.theo.models import SIRD

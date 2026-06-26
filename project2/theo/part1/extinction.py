@@ -3,27 +3,6 @@
 # They have been used for synthesizing, code structering, coding, and verification.
 # The author takes full responsibility for all content and decisions in this file.
 
-"""Part I(c), experiment 1 — when does a deadly SIRD collapse society?
-
-We treat the population as having *collapsed* once at least COLLAPSE_FRACTION of
-it has died (D >= 0.95 N) -- a robust "society destroyed" criterion, rather than
-the fragile all-or-nothing literal extinction (D = N; see experiment 2).
-
-We sweep the basic reproduction number R0 against the case-fatality ratio CFR on
-a fixed population and, for each combination, estimate the mean death toll
-D(inf)/N and the collapse probability P(D >= 0.95 N).
-
-The story: with *permanent* immunity (the R compartment), survivors are the
-recovered/immune, so the death toll is capped at about CFR (times the attack
-rate). Society therefore collapses only when the disease is near-totally lethal
-(CFR close to 1); a merely "very deadly" disease leaves a large immune remnant.
-
-Parametrisation: fix the removal rate r = gamma + mu (constant infectious period)
-and set  mu = CFR*r,  gamma = (1-CFR)*r,  beta = R0*r.
-
-Run:  uv run python -m project2.theo.part1.extinction
-"""
-
 import numpy as np
 
 from project2.theo.analysis import confidence_interval, replicate
